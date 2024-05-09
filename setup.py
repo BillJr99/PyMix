@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from distutils.core import setup, Extension, DistutilsExecError
+from distutils.core import setup, Extension #, DistutilsExecError
 import distutils.sysconfig
 import numpy.distutils.misc_util
 
