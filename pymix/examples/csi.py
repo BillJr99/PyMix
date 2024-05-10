@@ -109,8 +109,8 @@ tm.bayesStructureEM(data,1,5,40,0.1)
 
 # printing out the result of the training. The model should have three components and 
 # parameters closely matching the generating model.
-print "---------------------"
-print tm
-print tm.leaders
-print tm.groups
+print("---------------------")
+print(tm)
+print(tm.leaders)
+print(tm.groups)
 

@@ -43,14 +43,14 @@ organized in a hierarchical fashion.
 import random
 import math
 import copy
-from alphabet import Alphabet,IntegerRange
+from .alphabet import Alphabet,IntegerRange
 from string import split,replace,join
 import numpy
 from numpy import linalg as la
-import setPartitions
+from . import setPartitions
 import sys
 import re
-import cStringIO, tokenize
+import io, tokenize
 
 import _C_mixextend  # import C extension
 
@@ -170,12 +170,12 @@ class DataSet:
             self.p = 1    
         
         if not IDs:
-            self.sampleIDs = range(self.N)
+            self.sampleIDs = list(range(self.N))
         else:
             self.sampleIDs = IDs
 
         if not col_header:
-            self.headers = range(self.p)
+            self.headers = list(range(self.p))
         else:
             self.headers = col_header          
 
@@ -202,11 +202,11 @@ class DataSet:
         if IDs:
             self.sampleIDs = IDs
         else:
-            self.sampleIDs = range(self.N)
+            self.sampleIDs = list(range(self.N))
         if col_header:
             self.headers = col_header   
         else:
-            self.headers = range(self.p)            
+            self.headers = list(range(self.p))            
 
         self.dataMatrix = List
 
@@ -248,17 +248,17 @@ class DataSet:
             
             # prepending file identifier to column labels
             if fileID:
-                print "File ident: ", fileID
+                print("File ident: ", fileID)
                 for i in range(len(list1)):
                     list1[i] = str(fileID)+"-"+str(list1[i])
             
-            print fname,":",len(list1),"features"
+            print(fname,":",len(list1),"features")
 
             #print list1
 
             if IDheader == True:  # remove header for sample ID column, if present
                 tt = list1.pop(IDindex[q])
-                print tt
+                print(tt)
             #print list1            
 
             data_nrs[q] = len(list1)
@@ -279,11 +279,11 @@ class DataSet:
                 #print '->',sid
                
                 if len(l) != data_nrs[q]:
-                    print l
-                    print list1
-                    raise RuntimeError, "Different numbers of headers and data columns in files " + str(fname)+", sample "+str(sid) +" ,"+str(len(l))+" != "+str(data_nrs[q])
+                    print(l)
+                    print(list1)
+                    raise RuntimeError("Different numbers of headers and data columns in files " + str(fname)+", sample "+str(sid) +" ,"+str(len(l))+" != "+str(data_nrs[q]))
                 
-                if not data_dict.has_key(sid):
+                if sid not in data_dict:
                     data_dict[sid] = {}
                     data_dict[sid][fname] = l
 
@@ -295,11 +295,11 @@ class DataSet:
             self.sampleIDs.append(k)
             citem = []
             for q,fname in enumerate(fileNames):
-                if data_dict[k].has_key(fname):
+                if fname in data_dict[k]:
                     citem += data_dict[k][fname]
                 else:
                     incomplete = 1
-                    print "Warning: No data for sample "+str(k)+" in file "+str(fname)+"."
+                    print("Warning: No data for sample "+str(k)+" in file "+str(fname)+".")
                     citem += [missing] * data_nrs[q]
 
             self.dataMatrix.append(citem)
@@ -336,7 +336,7 @@ class DataSet:
 
         """
         if self.complex:
-            raise NotImplementedError, "Needs to be done..."
+            raise NotImplementedError("Needs to be done...")
         
         # get number of clusters in 'c'
         d = {}
@@ -344,7 +344,7 @@ class DataSet:
             if lab == -1: # unassigned samples are handled seperately below
                 continue
             d[lab]= ""
-        G = len(d.keys())
+        G = len(list(d.keys()))
 
         max_h = 0
         for h in self.headers:
@@ -362,35 +362,35 @@ class DataSet:
         for i in d:
             t = numpy.where(c == i)
             index = t[0]
-            print "\n----------------------------------- cluster ",i,"------------------------------------"
-            print ' ' * (max_sid+3),
+            print("\n----------------------------------- cluster ",i,"------------------------------------")
+            print(' ' * (max_sid+3), end=' ')
             for k in range(len(self.headers)):
                 hlen = len(str(self.headers[k]))
-                print str(self.headers[k])+ " " * (space-hlen),
-            print
+                print(str(self.headers[k])+ " " * (space-hlen), end=' ')
+            print()
             for j in range(len(index)):
-                print '%-*s' % ( max_sid+3, self.sampleIDs[index[j]]),
+                print('%-*s' % ( max_sid+3, self.sampleIDs[index[j]]), end=' ')
                 for k in range(len(self.dataMatrix[index[j]])):
                     dlen = len(str(self.dataMatrix[index[j]][k]))
-                    print str(self.dataMatrix[index[j]][k] ) + " " * (space-dlen),
-                print
+                    print(str(self.dataMatrix[index[j]][k] ) + " " * (space-dlen), end=' ')
+                print()
         
         t = numpy.where(c == -1)
         index = t[0]
         if len(index) > 0:
-            print "\n----------- Unassigned ----------------"
+            print("\n----------- Unassigned ----------------")
             space = max_h+2  
-            print ' ' * (max_sid+3),
+            print(' ' * (max_sid+3), end=' ')
             for k in range(len(self.headers)):
                 hlen = len(str(self.headers[k]))
-                print self.headers[k]+ " " * (space-hlen),
-            print
+                print(self.headers[k]+ " " * (space-hlen), end=' ')
+            print()
             for j in range(len(index)):
-                print '%-*s' % ( max_sid+3, self.sampleIDs[index[j]]),
+                print('%-*s' % ( max_sid+3, self.sampleIDs[index[j]]), end=' ')
                 for k in range(len(self.dataMatrix[index[j]])):
                     dlen = len(str(self.dataMatrix[index[j]][k]))
-                    print str(self.dataMatrix[index[j]][k] ) + " " * (space-dlen),
-                print
+                    print(str(self.dataMatrix[index[j]][k] ) + " " * (space-dlen), end=' ')
+                print()
 
     def internalInit(self,m):
         """
@@ -405,7 +405,7 @@ class DataSet:
         for i in range(len(self.dataMatrix)):
             try:
                 [t,dat] = m.components[0].formatData(self.dataMatrix[i])
-            except InvalidDistributionInput, ex:
+            except InvalidDistributionInput as ex:
                 ex.message += ' ( Sample '+str(self.sampleIDs[i])+', index = '+str(i)+' )'
                 raise
             
@@ -443,7 +443,7 @@ class DataSet:
         """
         #assert self.suff_dataRange is not None,'DataSet needs to be initialized with .internalInit()'  
         if i < 0 or i >= len(self.suff_dataRange):
-            raise IndexError, "Invalid index " + str(i)
+            raise IndexError("Invalid index " + str(i))
 
         return self._internalData_views[i]
 
@@ -468,7 +468,7 @@ class DataSet:
             r = self.headers.pop(ind)    
             self.p -= 1
             if not silent:
-                print "Feature "+str(r)+" has been removed."
+                print("Feature "+str(r)+" has been removed.")
 
     def removeSamples(self, ids,silent = 0):
         """
@@ -478,7 +478,7 @@ class DataSet:
         @param silent: verbosity control
         """
         if self.internalData:
-            print "Warning: internalInit has to be rerun after removeSamples."
+            print("Warning: internalInit has to be rerun after removeSamples.")
             self.internalData = None
             self.suff_dataRange = None
             self.suff_p = None
@@ -490,7 +490,7 @@ class DataSet:
             self.sampleIDs.pop(sind)
 
         if not silent:
-            print 'Samples '+str(ids)+' removed'
+            print('Samples '+str(ids)+' removed')
 
         self.N = self.N - len(ids)
 
@@ -505,7 +505,7 @@ class DataSet:
         
         """
         if self.internalData:
-            print "Warning: internalInit has to be rerun after removeSamples."
+            print("Warning: internalInit has to be rerun after removeSamples.")
             self.internalData = None
             self.suff_dataRange = None
             self.suff_p = None
@@ -513,7 +513,7 @@ class DataSet:
 
         ind = self.headers.index(fid)
         
-        print "Removing samples with "+fid +" < "+str(min_value)+" or > "+str(max_value)+" ...",
+        print("Removing samples with "+fid +" < "+str(min_value)+" or > "+str(max_value)+" ...", end=' ')
         i = 0  # current index in dataMatrix
         c = 0  # number of samples already considered
         r = 0  # number of removed samples
@@ -528,7 +528,7 @@ class DataSet:
                 i += 1
                 c += 1
         
-        print str(r)+" samples removed"
+        print(str(r)+" samples removed")
         self.N = self.N - r
         
 
@@ -548,7 +548,7 @@ class DataSet:
                     count += 1
 
         if not silent:
-            print str(count), "values '"+str(valueToMask)+"' masked with '"+str(maskValue)+"' in all features."
+            print(str(count), "values '"+str(valueToMask)+"' masked with '"+str(maskValue)+"' in all features.")
 
 
     def maskFeatures(self, headerList, valueToMask, maskValue):
@@ -572,7 +572,7 @@ class DataSet:
                     self.dataMatrix[j][ind] = maskValue
                     count += 1
 
-        print str(count), "values '"+str(valueToMask)+"' masked with '"+str(maskValue)+"' in "+str(len(headerList))+" features."
+        print(str(count), "values '"+str(valueToMask)+"' masked with '"+str(maskValue)+"' in "+str(len(headerList))+" features.")
 
 
 
@@ -670,7 +670,7 @@ class DataSet:
             res.sampleIDs = self.sampleIDs 
 
         res.missingSymbols = {}
-        if self.missingSymbols.has_key(index):
+        if index in self.missingSymbols:
             res.missingSymbols[0] = self.missingSymbols[index]
         
         res.suff_dataRange = [self.suff_dataRange[index]-self.suff_dataRange[index-1]]
@@ -697,7 +697,7 @@ class DataSet:
         """
         assert self.suff_dataRange is not None
         
-        if not self.missingSymbols.has_key(ind):
+        if ind not in self.missingSymbols:
             return []
         else:
             m_ind = []
@@ -882,7 +882,7 @@ class ProbDistribution:
         
         @return: sampled value
         """
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def sampleSet(self,nr):
         """
@@ -892,7 +892,7 @@ class ProbDistribution:
 
         @return: sampled values
         """
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def sufficientStatistics(self, posterior, data):
         """
@@ -903,7 +903,7 @@ class ProbDistribution:
         
         @return: list with dot(posterior, data) and dot(posterior, data**2)
         """
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
 
     def isValid(self,x):
@@ -977,13 +977,13 @@ class PriorDistribution(ProbDistribution):
         
         @param m: single appropriate ProbDistribution object or list of ProbDistribution objects
         """
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def posterior(self,m,x):    
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def marginal(self,x):
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def mapMStep(self, dist, posterior, data, mix_pi=None, dist_ind = None):       
         """
@@ -1090,9 +1090,9 @@ class NormalDistribution(ProbDistribution):
             elif data.shape == (nr,): 
                 x = data
             else:
-                raise TypeError,'Invalid data shape: '+str(data.shape)
+                raise TypeError('Invalid data shape: '+str(data.shape))
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(type(data))
+            raise TypeError("Unknown/Invalid input type:"+str(type(data)))
         
         # computing log likelihood 
         res = _C_mixextend.wrap_gsl_ran_gaussian_pdf(self.mu, self.sigma, x)
@@ -1133,7 +1133,7 @@ class NormalDistribution(ProbDistribution):
             x = data[:,0]
             
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
         nr = len(x)
         
         sh = x.shape
@@ -1148,7 +1148,7 @@ class NormalDistribution(ProbDistribution):
             new_mu =  numpy.dot(posterior, x) / post_sum
             new_sigma = math.sqrt(numpy.dot(posterior, (x - new_mu)**2 ) / post_sum)
         else:
-            raise InvalidPosteriorDistribution, "Sum of posterior is zero: "+str(self)+" has zero likelihood for data set."
+            raise InvalidPosteriorDistribution("Sum of posterior is zero: "+str(self)+" has zero likelihood for data set.")
                         
         if new_sigma < self.min_sigma:
            # enforcing non zero variance estimate
@@ -1163,7 +1163,7 @@ class NormalDistribution(ProbDistribution):
             float(x)
         except (ValueError):
             #print "Invalid data: ",x,"in NormalDistribution."
-            raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in NormalDistribution."
+            raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in NormalDistribution.")
 
     def formatData(self,x):
         if isinstance(x,list) and len(x) == 1: 
@@ -1180,7 +1180,7 @@ class NormalDistribution(ProbDistribution):
         return self.pdf(x)
 
     def merge(self,dlist, weights):
-        raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+        raise DeprecationWarning('Part of the outdated structure learning implementation.')
         assert len(dlist)+1 == len(weights)
 
         norm = sum(weights)
@@ -1250,7 +1250,7 @@ class MultiNormalDistribution(ProbDistribution):
         elif isinstance(data, numpy.ndarray):
             x = data
         else:
-            raise TypeError,"Unknown/Invalid input type." 
+            raise TypeError("Unknown/Invalid input type.") 
             
     	# initial part of the formula
     	# this code depends only on the model parameters ... optmize?
@@ -1272,7 +1272,7 @@ class MultiNormalDistribution(ProbDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
         
         post = posterior.sum() # sum of posteriors
         self.mu = numpy.dot(posterior, x)/post
@@ -1308,12 +1308,12 @@ class MultiNormalDistribution(ProbDistribution):
 
     def isValid(self,x):
         if not len(x) == self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) "+str(len(x))+" in MultiNormalDistribution(p="+str(self.p)+")."
+            raise InvalidDistributionInput("\n\tInvalid data: wrong dimension(s) "+str(len(x))+" in MultiNormalDistribution(p="+str(self.p)+").")
         for v in x:
             try:
                 float(v)
             except (ValueError):
-                raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in MultiNormalDistribution."
+                raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in MultiNormalDistribution.")
         
     def flatStr(self, offset):
         offset +=1
@@ -1411,25 +1411,25 @@ class ConditionalGaussDistribution(ProbDistribution):
                 pid = self.parents[j]
                 cov_j = numpy.dot(posterior, (data[:,j] - self.mu[j]) * (data[:,pid] - self.mu[pid])) / post_sum 
         
-                if pid <> -1:  # has parents
+                if pid != -1:  # has parents
                     self.w[j] = cov_j / var[pid]
-                    print  var[j], self.w[j]**2, var[pid], var[j] - (self.w[j]**2 * var[pid])
+                    print(var[j], self.w[j]**2, var[pid], var[j] - (self.w[j]**2 * var[pid]))
                     self.sigma[j] = math.sqrt( var[j] - (self.w[j]**2 * var[pid]) )
                 else:
                     self.sigma[j] = math.sqrt( var[j])
                 
         else:
-            raise ValueError, 'Invalid posterior.'
+            raise ValueError('Invalid posterior.')
 
         
     def isValid(self,x):
         if not len(x) == self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: wrong dimension(s) "+str(len(x))+" in MultiNormalDistribution(p="+str(self.p)+")."
+            raise InvalidDistributionInput("\n\tInvalid data: wrong dimension(s) "+str(len(x))+" in MultiNormalDistribution(p="+str(self.p)+").")
         for v in x:
             try:
                 float(v)
             except (ValueError):
-                raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in MultiNormalDistribution."
+                raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in MultiNormalDistribution.")
 
 class DependenceTreeDistribution(ConditionalGaussDistribution):
     """
@@ -1461,7 +1461,7 @@ class DependenceTreeDistribution(ConditionalGaussDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
 
         post = posterior.sum() # sum of posteriors
         self.mu = numpy.dot(posterior, x)/post
@@ -1606,9 +1606,9 @@ class ExponentialDistribution(ProbDistribution):
             elif data.shape == (nr,): 
                 x = data
             else:
-                raise TypeError,'Invalid data shape: '+str(data.shape)
+                raise TypeError('Invalid data shape: '+str(data.shape))
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(type(data))
+            raise TypeError("Unknown/Invalid input type:"+str(type(data)))
         
         return math.log(self.lambd) + (-self.lambd * x)  # XXX pure Python implementation for now
 
@@ -1623,7 +1623,7 @@ class ExponentialDistribution(ProbDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data[:,0]
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
         
         self.lambd = posterior.sum() / numpy.dot(posterior, x)
         
@@ -1635,10 +1635,10 @@ class ExponentialDistribution(ProbDistribution):
             float(x)
         except ValueError:
             #print "Invalid data: ",x,"in ExponentialDistribution."
-            raise InvalidDistributionInput,"\n\tInvalid data: "+str(x)+" in ExponentialDistribution."
+            raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in ExponentialDistribution.")
 
         if x < 0:
-            raise InvalidDistributionInput,"\n\tInvalid data: negative float "+str(x)+" in ExponentialDistribution."
+            raise InvalidDistributionInput("\n\tInvalid data: negative float "+str(x)+" in ExponentialDistribution.")
             
     def formatData(self,x):
         """
@@ -1690,7 +1690,7 @@ class UniformDistribution(ProbDistribution):
         elif isinstance(data, numpy.ndarray):
             x = data
         else:
-            raise TypeError,"Unknown/Invalid input type." 
+            raise TypeError("Unknown/Invalid input type.") 
         res = numpy.zeros(len(x),dtype='Float64')
         for i in range(len(x)):
             # density is self.density inside the interval and -inf (i.e. 0) outside
@@ -1719,7 +1719,7 @@ class UniformDistribution(ProbDistribution):
         try:
             float(x)
         except (ValueError):
-            raise InvalidDistributionInput, "\n\tInvalid data in "+str(x)+" in UniformDistribution."
+            raise InvalidDistributionInput("\n\tInvalid data in "+str(x)+" in UniformDistribution.")
         
     def formatData(self,x):
         if isinstance(x,list) and len(x) == 1: 
@@ -1729,16 +1729,16 @@ class UniformDistribution(ProbDistribution):
 
     
     def flatStr(self,offset):
-        raise NotImplementedError, "Boom !"
+        raise NotImplementedError("Boom !")
                 
     def posteriorTraceback(self,x):
-        raise NotImplementedError, "Kawoom !"
+        raise NotImplementedError("Kawoom !")
 
     def update_suff_p(self):
         return self.suff_p
 
     def merge(self,dlist, weights):
-        raise NotImplementedError, "Kawoom !"
+        raise NotImplementedError("Kawoom !")
 
 
 # ------------------------------------------------------------------------
@@ -1813,7 +1813,7 @@ class MultinomialDistribution(ProbDistribution):
         elif isinstance(data, numpy.ndarray):
             x = data
         else:
-            raise TypeError,"Unknown/Invalid input type." 
+            raise TypeError("Unknown/Invalid input type.") 
 
         # switch to log scale for density computation
         log_phi = numpy.log(self.phi) 
@@ -1837,7 +1837,7 @@ class MultinomialDistribution(ProbDistribution):
                     break
             sample.append(k)
 
-        return map(self.alphabet.external,sample)   
+        return list(map(self.alphabet.external,sample))   
     
     def sampleSet(self,nr):
         res = []
@@ -1853,7 +1853,7 @@ class MultinomialDistribution(ProbDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
 
         ind = numpy.where(self.parFix == 0)[0]
         fix_flag = 0
@@ -1872,7 +1872,7 @@ class MultinomialDistribution(ProbDistribution):
                 dsum += est
 
         if dsum == 0.0: 
-            raise InvalidPosteriorDistribution, "Invalid posterior in MStep."
+            raise InvalidPosteriorDistribution("Invalid posterior in MStep.")
         
         # normalzing parameter estimates
         self.phi[ind] = (self.phi[ind] * fix_phi) / dsum
@@ -1890,7 +1890,7 @@ class MultinomialDistribution(ProbDistribution):
 
     def isValid(self,x):
         if sum(map(self.alphabet.isAdmissable,x)) != self.p:
-            raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in MultinomialDistribution("+str(self.alphabet.listOfCharacters)+")."
+            raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in MultinomialDistribution("+str(self.alphabet.listOfCharacters)+").")
 
     def formatData(self,x):
         count = [0] * self.M #  numpy.zeros(self.M)        
@@ -1917,7 +1917,7 @@ class MultinomialDistribution(ProbDistribution):
         return self.pdf(x)
 
     def merge(self,dlist, weights):
-        raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+        raise DeprecationWarning('Part of the outdated structure learning implementation.')
         
         norm = sum(weights)
         m_phi = self.phi * weights[0]
@@ -1929,7 +1929,7 @@ class MultinomialDistribution(ProbDistribution):
                 m_phi[j] += weights[i+1] * dlist[i].phi[j]
 
         f = lambda x: x/norm
-        self.phi = numpy.array(map(f, m_phi) , dtype='Float64'   )
+        self.phi = numpy.array(list(map(f, m_phi)) , dtype='Float64'   )
  
 
 
@@ -1964,7 +1964,7 @@ class DiscreteDistribution(MultinomialDistribution):
         elif isinstance(data, numpy.ndarray):
             x = data
         else:
-            raise TypeError,"Unknown/Invalid input type." 
+            raise TypeError("Unknown/Invalid input type.") 
 
         # switch to log scale for density computation
         log_phi = numpy.log(self.phi) 
@@ -1979,7 +1979,7 @@ class DiscreteDistribution(MultinomialDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
 
         ind = numpy.where(self.parFix == 0)[0]
         fix_flag = 0
@@ -1998,10 +1998,10 @@ class DiscreteDistribution(MultinomialDistribution):
                 dsum += est
 
         if dsum == 0.0: 
-            print self
-            print posterior
+            print(self)
+            print(posterior)
             
-            raise InvalidPosteriorDistribution, "Invalid posterior in MStep."
+            raise InvalidPosteriorDistribution("Invalid posterior in MStep.")
         
         # normalzing parameter estimates
         self.phi[ind] = (self.phi[ind] * fix_phi) / dsum
@@ -2054,12 +2054,12 @@ class DiscreteDistribution(MultinomialDistribution):
     def isValid(self,x):
         if type(x) == str or type(x) == int or type(x) == float: 
             if not self.alphabet.isAdmissable(str(x)):
-                raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in DiscreteDistribution("+str(self.alphabet.listOfCharacters)+")."
+                raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in DiscreteDistribution("+str(self.alphabet.listOfCharacters)+").")
         else:
             if type(x) == list and len(x) == 1:
                 self.isValid(x[0])
             else:            
-                raise InvalidDistributionInput, "\n\tInvalid data: "+str(x)+" in DiscreteDistribution("+str(self.alphabet.listOfCharacters)+")."
+                raise InvalidDistributionInput("\n\tInvalid data: "+str(x)+" in DiscreteDistribution("+str(self.alphabet.listOfCharacters)+").")
 
     def flatStr(self,offset):
         offset +=1
@@ -2124,8 +2124,8 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
             try:
                 res = _C_mixextend.wrap_gsl_dirichlet_lnpdf(self.alpha, [m.phi])
             except ValueError:
-                print m
-                print self
+                print(m)
+                print(self)
                 raise
             
             return res[0]
@@ -2206,14 +2206,14 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
                     dsum += est
     
             if dsum == 0.0: 
-                raise InvalidPosteriorDistribution, "Invalid posterior in MStep."
+                raise InvalidPosteriorDistribution("Invalid posterior in MStep.")
     
             ind = numpy.where(dist.parFix == 0)[0]
             # normalzing parameter estimates
             dist.phi[ind] = (dist.phi[ind] * fix_phi) / dsum
     
         else:
-            raise TypeError,'Invalid input '+str(dist.__class__)
+            raise TypeError('Invalid input '+str(dist.__class__))
 
 
     def mapMStepMerge(self, group_list):
@@ -2288,10 +2288,10 @@ class DirichletPrior(PriorDistribution):  # DirichletDistribution,
         
     def isValid(self,x):
         if not isinstance(x,MultinomialDistribution):
-            raise InvalidDistributionInput, "in DirichletPrior: "+str(x)
+            raise InvalidDistributionInput("in DirichletPrior: "+str(x))
         else:
             if self.M != x.M:
-                raise InvalidDistributionInput, "in DirichletPrior: "+str(x)
+                raise InvalidDistributionInput("in DirichletPrior: "+str(x))
 
     def flatStr(self,offset):
         offset +=1
@@ -2364,10 +2364,10 @@ class NormalGammaPrior(PriorDistribution):
             raise TypeError
 
     def posterior(self,m,x):  
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def marginal(self,x):
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def mapMStep(self, dist, posterior, data, mix_pi=None, dist_ind = None):
 
@@ -2378,15 +2378,15 @@ class NormalGammaPrior(PriorDistribution):
         elif isinstance(data,numpy.ndarray):
             x = data[:,0]
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
         nr = len(x)
         sh = x.shape
         assert sh == (nr,)
         
         post_sum = numpy.sum(posterior)  # n_k
         if post_sum == 0.0:
-            print dist
-            raise InvalidPosteriorDistribution, "Sum of posterior is zero."
+            print(dist)
+            raise InvalidPosteriorDistribution("Sum of posterior is zero.")
 
         # computing ML estimates for mu and sigma
         ml_mu = numpy.dot(posterior, x) / post_sum  # ML estimator for mu
@@ -2456,7 +2456,7 @@ class NormalGammaPrior(PriorDistribution):
         
     def isValid(self,x):
         if not isinstance(x,NormalDistribution):
-            raise InvalidDistributionInput, "NormalGammaPrior: "+ str(x)
+            raise InvalidDistributionInput("NormalGammaPrior: "+ str(x))
 
     def setParams(self, x, K):
         """
@@ -2555,7 +2555,7 @@ class DirichletMixturePrior(PriorDistribution):
             for i in range(self.M):
                 suff_stat[i] = numpy.dot(data[:,i], posterior)
         else:
-            raise TypeError,'Invalid input '+str(dist.__class__)
+            raise TypeError('Invalid input '+str(dist.__class__))
 
         res = 0.0
         for i in range(self.G):
@@ -2590,7 +2590,7 @@ class DirichletMixturePrior(PriorDistribution):
             for i in range(self.M):
                 suff_stat[i] = numpy.dot(data[:,i], posterior)
         else:
-            raise TypeError,'Invalid input '+str(dist.__class__)
+            raise TypeError('Invalid input '+str(dist.__class__))
 
         # posterior of the given multinomial distribution 'dist'
         # with respect to the components of the Dirichlet mixture prior
@@ -2665,10 +2665,10 @@ class DirichletMixturePrior(PriorDistribution):
 
     def isValid(self,x):
         if not isinstance(x,MultinomialDistribution):
-            raise InvalidDistributionInput, "DirichletMixturePrior: " + str(x)
+            raise InvalidDistributionInput("DirichletMixturePrior: " + str(x))
             
         if x.M != self.M:
-            raise InvalidDistributionInput, "DirichletMixturePrior: unequal dimensions " + str(x.M) + " != "+str(self.M)
+            raise InvalidDistributionInput("DirichletMixturePrior: unequal dimensions " + str(x.M) + " != "+str(self.M))
             
 
     def flatStr(self,offset):
@@ -2725,16 +2725,16 @@ class ConditionalGaussPrior(PriorDistribution):
                                          math.sqrt((self.beta[i,j] * self.cov[i,j]**2) / (self.var[i,pid] * (self.post_sums[i]/N) )), 
                                          [d[i].w[j]] ))
         else:
-            raise TypeError, 'Invalid input '+str(type(d))
+            raise TypeError('Invalid input '+str(type(d)))
 
         return res        
 
 
     def posterior(self,m,x):  
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def marginal(self,x):
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
 
     def mapMStep(self, dist, posterior, data, mix_pi=None, dist_ind=None):    
@@ -2800,7 +2800,7 @@ class ConditionalGaussPrior(PriorDistribution):
 
     def isValid(self,x):
         if not isinstance(x,ConditionalGaussDistribution):
-            raise InvalidDistributionInput, "ConditionalGaussPrior: " + str(x)
+            raise InvalidDistributionInput("ConditionalGaussPrior: " + str(x))
 
 
 
@@ -2820,7 +2820,7 @@ class ProductDistributionPrior(PriorDistribution):
 
     def __getitem__(self,ind):
         if ind < 0 or ind > self.dist_nr-1:
-            raise IndexError, 'Index '+str(ind)
+            raise IndexError('Index '+str(ind))
         else:
             return self.priorList[ind]
 
@@ -2874,13 +2874,13 @@ class ProductDistributionPrior(PriorDistribution):
 
     def isValid(self,p):
         if not isinstance(p,ProductDistribution):
-            raise InvalidDistributionInput,'Not a ProductDistribution.'
+            raise InvalidDistributionInput('Not a ProductDistribution.')
         if p.dist_nr != self.dist_nr:
-            raise InvalidDistributionInput,'Different dimensions in ProductDistributionPrior and ProductDistribution: ' + str(p.dist_nr)+' != '+ str(self.dist_nr)
+            raise InvalidDistributionInput('Different dimensions in ProductDistributionPrior and ProductDistribution: ' + str(p.dist_nr)+' != '+ str(self.dist_nr))
         for j in range(p.dist_nr):
             try:
                 self[j].isValid(p[j]) 
-            except InvalidDistributionInput,ex:
+            except InvalidDistributionInput as ex:
                 ex.message += "\n\tin ProductDistributionPrior.priorList["+str(j)+"]"
                 raise                       
 
@@ -2967,7 +2967,7 @@ class ProductDistribution(ProbDistribution):
                     res += self.distList[i].pdf(data.getInternalFeature(i))
             return res 
         else:
-            raise TypeError, 'DataSet object required, got '+ str(type(data))
+            raise TypeError('DataSet object required, got '+ str(type(data)))
         
     def sample(self):
         ls = []
@@ -3055,13 +3055,13 @@ class ProductDistribution(ProbDistribution):
             if self.distList[i].p == 1:
                 try:
                     self.distList[i].isValid(x[self.dataRange[i]-1])
-                except InvalidDistributionInput,ex:
+                except InvalidDistributionInput as ex:
                     ex.message += "\n\tin ProductDistribution.distList["+str(i)+"]"
                     raise                       
             else:
                 try: 
                     self.distList[i].isValid(x[last_index:self.dataRange[i]]) 
-                except InvalidDistributionInput,ex:
+                except InvalidDistributionInput as ex:
                     ex.message += "\n\tin ProductDistribution.distList["+str(i)+"]"
                     raise                       
             last_index = self.dataRange[i] 
@@ -3252,7 +3252,7 @@ class MixtureModelPrior(PriorDistribution):
 #            else:
 #                for j in range(mix.components[0].dist_nr):
 #                  print '    struct:', self.structPrior * mix.G
-            raise ValueError, 'nan result in MixtureModelPrior.pdf'            
+            raise ValueError('nan result in MixtureModelPrior.pdf')            
         return res
     
 
@@ -3287,16 +3287,16 @@ class MixtureModelPrior(PriorDistribution):
   
     def isValid(self, m):
         if not isinstance(m,MixtureModel):
-            raise InvalidDistributionInput, "MixtureModelPrior: " + str(m)
+            raise InvalidDistributionInput("MixtureModelPrior: " + str(m))
         else:
             if self.piPrior.M != m.G:
-                raise InvalidDistributionInput, "MixtureModelPrior: invalid size of piPrior."
+                raise InvalidDistributionInput("MixtureModelPrior: invalid size of piPrior.")
             
             try:
                 # check validity of each component
                 for i in range(m.G):
                     self.compPrior.isValid(m.components[i]) 
-            except InvalidDistributionInput,ex:
+            except InvalidDistributionInput as ex:
                 ex.message += "\n\tin MixtureModelPrior for component "+str(i)
                 raise                       
 
@@ -3499,7 +3499,7 @@ class MixtureModel(ProbDistribution):
             self.groups = []
 
             for i in range(nr):
-               self.leaders.append(range(self.G))
+               self.leaders.append(list(range(self.G)))
                d= {}
                for j in range(self.G):
                     d[j] = []
@@ -3519,7 +3519,7 @@ class MixtureModel(ProbDistribution):
         @return: posterior assigments
         """
         if not isinstance(data,DataSet):
-            raise TypeError, "DataSet object required, got"+ str(data.__class__)
+            raise TypeError("DataSet object required, got"+ str(data.__class__))
         else:
             if data.internalData is None:
                 data.internalInit(self)
@@ -3567,7 +3567,7 @@ class MixtureModel(ProbDistribution):
                     else:    
                         loc_l = l[i,:]
                         # masking missing values from parameter estimation
-                        if data.missingSymbols.has_key(j):
+                        if j in data.missingSymbols:
                             ind_miss = data.getMissingIndices(j)
                             for k in ind_miss:
                                 loc_l[k] = 0.0
@@ -3578,10 +3578,10 @@ class MixtureModel(ProbDistribution):
         if fix_flag:
             if unfix_pi == 0.0:
                 #print "----\n",self,"----\n"
-                 print "unfix_pi = ", unfix_pi
-                 print "fix_pi = ", fix_pi
-                 print "pi = ", self.pi
-                 raise RuntimeError, "unfix_pi = 0.0"  
+                 print("unfix_pi = ", unfix_pi)
+                 print("fix_pi = ", fix_pi)
+                 print("pi = ", self.pi)
+                 raise RuntimeError("unfix_pi = 0.0")  
                 
             for i in range(self.G):
                 if self.compFix[i] == 0:
@@ -3714,7 +3714,7 @@ class MixtureModel(ProbDistribution):
         @return: tuple of posterior matrix and log-likelihood from the last iteration
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 if not silent:
@@ -3725,7 +3725,7 @@ class MixtureModel(ProbDistribution):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         log_p_old = -1.0
         step = 0
@@ -3752,13 +3752,13 @@ class MixtureModel(ProbDistribution):
             diff = (log_p - log_p_old)
             
             if diff < 0.0 and step > 1 and abs(diff / log_p_old) > self.err_tol:
-                print log_p,log_p_old, diff,step,abs(diff / log_p_old)
-                print "WARNING: EM divergent."
-                raise ConvergenceFailureEM,"Convergence failed."
+                print(log_p,log_p_old, diff,step,abs(diff / log_p_old))
+                print("WARNING: EM divergent.")
+                raise ConvergenceFailureEM("Convergence failed.")
 
             if numpy.isnan(log_p):
-                print "WARNING: One sample was not assigned."
-                raise ConvergenceFailureEM,"Non assigned element."               
+                print("WARNING: One sample was not assigned.")
+                raise ConvergenceFailureEM("Non assigned element.")               
                 
             if (not tilt or (tilt and step+1 >= self.nr_tilt_steps)) and diff >= 0.0 and delta >= abs(diff) and max_iter != 1:
                 if not silent:
@@ -3846,10 +3846,10 @@ class MixtureModel(ProbDistribution):
             if fix_flag:
                 if unfix_pi == 0.0:
                     #print "----\n",self,"----\n"
-                    print "unfix_pi = ", unfix_pi
-                    print "fix_pi = ", fix_pi
-                    print "pi = ", self.pi
-                    raise RuntimeError, "unfix_pi = 0.0"  
+                    print("unfix_pi = ", unfix_pi)
+                    print("fix_pi = ", fix_pi)
+                    print("pi = ", self.pi)
+                    raise RuntimeError("unfix_pi = 0.0")  
                 
                 for i in range(self.G):
                     if self.compFix[i] == 0:
@@ -3906,7 +3906,7 @@ class MixtureModel(ProbDistribution):
                     #print "l[:,",j,"] = ", log_l[:,j] 
                     #print 'data[',j,'] = ',data.dataMatrix[j]
                     
-                    raise InvalidPosteriorDistribution, "Invalid posterior distribution."
+                    raise InvalidPosteriorDistribution("Invalid posterior distribution.")
 
             # for valid posterior, normalize and go on    
             else:
@@ -3956,7 +3956,7 @@ class MixtureModel(ProbDistribution):
         log_p = _C_mixextend.get_normalized_posterior_matrix(log_l)
 
         if log_p == float('-inf'):
-            raise InvalidPosteriorDistribution, "Invalid posterior distribution."
+            raise InvalidPosteriorDistribution("Invalid posterior distribution.")
 
         if mix_posterior is not None:
             # multiplying in the posterior of upper hierarchy mixture
@@ -3981,7 +3981,7 @@ class MixtureModel(ProbDistribution):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 if not silent:
@@ -3992,7 +3992,7 @@ class MixtureModel(ProbDistribution):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         logp_list = []
         best_logp = float('-inf')
@@ -4025,14 +4025,14 @@ class MixtureModel(ProbDistribution):
                     best_logp = log_p
       
         if not silent:
-            print "\nBest model likelihood over ",nr_runs,"random initializations:"
-            print "Model likelihoods:",logp_list
-            print "Average logp: ", sum(logp_list)/float(nr_runs)," SD:",numpy.array(logp_list).std()
-            print "Best logp:",best_logp
+            print("\nBest model likelihood over ",nr_runs,"random initializations:")
+            print("Model likelihoods:",logp_list)
+            print("Average logp: ", sum(logp_list)/float(nr_runs)," SD:",numpy.array(logp_list).std())
+            print("Best logp:",best_logp)
 
         # check whether at least one run was sucessfully completed        
         if best_model == None:
-            raise ConvergenceFailureEM, 'All '+ str(nr_runs)+' runs have failed.'
+            raise ConvergenceFailureEM('All '+ str(nr_runs)+' runs have failed.')
         
         self.components = best_model.components  # assign best parameter set to model 'self'
         self.pi = best_model.pi
@@ -4057,7 +4057,7 @@ class MixtureModel(ProbDistribution):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 sys.stdout.write("Parsing data set...")
@@ -4066,7 +4066,7 @@ class MixtureModel(ProbDistribution):
                 sys.stdout.write("done\n")
                 sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
     
         assert self.struct 
         best_logp = None
@@ -4078,13 +4078,13 @@ class MixtureModel(ProbDistribution):
             log_p = candidate_model.randMaxEM(data,nr_runs,nr_steps,delta,tilt=tilt,silent=silent)
             ch = candidate_model.updateStructureGlobal(data,silent= silent) 
             if not silent:
-                print "Changes = ",ch
+                print("Changes = ",ch)
             while ch != 0:
                 try:
                     candidate_model.EM(data,30,0.01,silent=1,tilt=0)
                     ch = candidate_model.updateStructureGlobal(data,silent= silent)
                     if not silent:
-                        print "Changes = ",ch
+                        print("Changes = ",ch)
                 except ConvergenceFailureEM:
                     error = 1
                     break
@@ -4128,7 +4128,7 @@ class MixtureModel(ProbDistribution):
         """
 
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 if not silent:
@@ -4139,7 +4139,7 @@ class MixtureModel(ProbDistribution):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         log_p_old = float('-inf')
         step = 0
@@ -4206,7 +4206,7 @@ class MixtureModel(ProbDistribution):
             if diff < 0.0 and step > 1 and abs(diff / log_p_old) > self.err_tol:
                 #print log_p,log_p_old, diff,step,abs(diff / log_p_old)
                 #print "WARNING: EM divergent."
-                raise ConvergenceFailureEM,"Convergence failed, EM divergent: "  
+                raise ConvergenceFailureEM("Convergence failed, EM divergent: ")  
                                 
             if (not tilt or (tilt and step+1 >= self.nr_tilt_steps)) and delta >= diff and max_iter != 1: 
                 if not silent:
@@ -4288,7 +4288,7 @@ class MixtureModel(ProbDistribution):
                     #print "fix_pi = ", fix_pi
                     #print "pi = ", self.pi
                     #print self
-                    raise ValueError, "unfix_pi = 0.0"  
+                    raise ValueError("unfix_pi = 0.0")  
                 for i in range(self.G):
                     if self.compFix[i] == 0:
                         self.pi[i] = (self.pi[i] * fix_pi) / unfix_pi
@@ -4322,7 +4322,7 @@ class MixtureModel(ProbDistribution):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Invalid input type format: " + str(data.__class__)+", DataSet required."
+            raise ValueError("Invalid input type format: " + str(data.__class__)+", DataSet required.")
        
         if EStep == None:
             EStep = self.EStep
@@ -4333,7 +4333,7 @@ class MixtureModel(ProbDistribution):
         [l,log_l] = EStep(data,EStepParam = EStepParam)
         
         if not silent:
-            print "classify loglikelihood: "+str(log_l)+".\n"
+            print("classify loglikelihood: "+str(log_l)+".\n")
  
         # cluster assingments initialised with -1
         z = numpy.ones(data.N,dtype='Int32') * -1       
@@ -4372,13 +4372,13 @@ class MixtureModel(ProbDistribution):
                 cluster[z[i]].append(labels[i])
                 en[z[i]].append(entropy_list[i])
         
-            print "\n** Clustering **"
+            print("\n** Clustering **")
             for j in range(self.G):
-                print "Cluster ",j,', size',len(cluster[j])
-                print cluster[j], "\n" 
+                print("Cluster ",j,', size',len(cluster[j]))
+                print(cluster[j], "\n") 
         
-            print "Unassigend due to entropy cutoff:"
-            print cluster[-1], "\n"
+            print("Unassigend due to entropy cutoff:")
+            print(cluster[-1], "\n")
 
         return z
 
@@ -4394,14 +4394,14 @@ class MixtureModel(ProbDistribution):
                 for j in range(x.N):
                     try:
                         self.components[i].isValid(x.dataMatrix[j])
-                    except InvalidDistributionInput, ex:
+                    except InvalidDistributionInput as ex:
                         ex.message += "\n\tin MixtureModel.components["+str(i)+"] for DataSet.dataMatrix["+str(j)+"]."
                         raise
         else:            
             for i in range(self.G):
                 try:
                     self.components[i].isValid(x)
-                except InvalidDistributionInput, ex:
+                except InvalidDistributionInput as ex:
                     ex.message += "\n\tMixtureModel.components["+str(i)+"]."
                     raise
 
@@ -4438,11 +4438,11 @@ class MixtureModel(ProbDistribution):
         if self.struct:
             f = lambda x: index_map[x]
             for j in range(self.dist_nr):
-                new_l = map(f,self.leaders[j])
+                new_l = list(map(f,self.leaders[j]))
                 order_leaders.append(new_l)
                 d = {}
                 for h in self.leaders[j]:
-                    new_g = map(f,self.groups[j][h])
+                    new_g = list(map(f,self.groups[j][h]))
                     d[index_map[h]] = new_g
                 order_groups.append(d)    
 
@@ -4473,7 +4473,7 @@ class MixtureModel(ProbDistribution):
           indices[i] = self.pi[i]
 
         # determine new order of components by ascending mixture weight
-        items = [(v, k) for k, v in indices.items()] 
+        items = [(v, k) for k, v in list(indices.items())] 
         items.sort()
         
         order = []
@@ -4502,7 +4502,7 @@ class MixtureModel(ProbDistribution):
         elif  isinstance(data, DataSet):
             sequence = data.internalData
        
-        print "-------- getClusterEntropy ------------"
+        print("-------- getClusterEntropy ------------")
         post_entropy = []
         log_l = self.getPosterior(sequence)      
         l = numpy.exp(log_l)
@@ -4510,12 +4510,12 @@ class MixtureModel(ProbDistribution):
             post_entropy.append(entropy(l[:,i]))
         
         max_entropy = entropy([1.0/self.G]*self.G)
-        print "Max entropy for G=",self.G,":",max_entropy
+        print("Max entropy for G=",self.G,":",max_entropy)
         
-        print "--------\nPosterior distribuion: % max entropy"
+        print("--------\nPosterior distribuion: % max entropy")
         for i in range(data.N):
-            print data.sampleIDs[i],": ",post_entropy[i] ," -> ",post_entropy[i] / max_entropy ,"%"
-        print "--------\n"
+            print(data.sampleIDs[i],": ",post_entropy[i] ," -> ",post_entropy[i] / max_entropy ,"%")
+        print("--------\n")
         
     def posteriorTraceback(self,x):
         return self.pdf(x)[0] 
@@ -4544,18 +4544,18 @@ class MixtureModel(ProbDistribution):
 
         l,log_p = self.EStep(data)
 
-        print "seqLen = ", data.p
-        print "pi = ",self.pi
+        print("seqLen = ", data.p)
+        print("pi = ",self.pi)
         max_en = entropy([1.0/self.G]*self.G)
         for c in range(self.G):
             temp = numpy.where(z == c)
             c_index = temp[0]
-            print "\n---------------------------------------------------"
-            print "Cluster = ",c,": ",c_index
+            print("\n---------------------------------------------------")
+            print("Cluster = ",c,": ",c_index)
             for j in c_index:
                 t = self.pdf(numpy.array([sequence[j]]))[0]
-                print "\nj = ",j,", id =",data.sampleIDs[j],", log_l = ",t," -> ",numpy.exp(t)
-                print "posterior = ",numpy.exp(l[:,j]).tolist(),"\n"
+                print("\nj = ",j,", id =",data.sampleIDs[j],", log_l = ",t," -> ",numpy.exp(t))
+                print("posterior = ",numpy.exp(l[:,j]).tolist(),"\n")
                 tb = []
                 for g in range(self.G):
                     ll = self.components[g].posteriorTraceback(data.internalData[j] )
@@ -4571,39 +4571,39 @@ class MixtureModel(ProbDistribution):
                 for i in range(len(tb[0])):
                     max_comp[i] = numpy.argmax(tb_arr[:,i])
                     en_percent[i] = entropy(exp_arr[:,i]) / max_en
-                print "     ",
+                print("     ", end=' ')
                 for q in range(len(tb[0])):
                     if en_percent[q] < en_cut:
                         head_len = len(data.headers[q])
-                        print " " * (16-head_len) + str(data.headers[q]),
-                print 
-                print "     ",
+                        print(" " * (16-head_len) + str(data.headers[q]), end=' ')
+                print() 
+                print("     ", end=' ')
                 for q in range(len(tb[0])):
                    if en_percent[q] < en_cut:
                         x_len = len(str(data.dataMatrix[j][q]))
-                        print " " * (16-x_len) + str(data.dataMatrix[j][q]),
-                print 
+                        print(" " * (16-x_len) + str(data.dataMatrix[j][q]), end=' ')
+                print() 
                 for e in range(self.G):
-                    print e,": [",
+                    print(e,": [", end=' ')
                     if e != z[j]:
                         for k in range(len(exp_tb[e])):
                             if en_percent[k] < en_cut:
-                                print "%16.10f" % (exp_tb[e][k],),
+                                print("%16.10f" % (exp_tb[e][k],), end=' ')
                     else:
                         for k in range(len(exp_tb[e])):
                             if en_percent[k] < en_cut:
-                                print " *  %12.10f" % (exp_tb[e][k],),
-                    print "]" 
-                print "max  ",
+                                print(" *  %12.10f" % (exp_tb[e][k],), end=' ')
+                    print("]") 
+                print("max  ", end=' ')
                 for e in range(len(data.headers)):
                     if en_percent[e] < en_cut:
-                        print " "*15+str(max_comp[e]),
-                print
-                print "%EN  ",
+                        print(" "*15+str(max_comp[e]), end=' ')
+                print()
+                print("%EN  ", end=' ')
                 for e in range(len(data.headers)):
                     if en_percent[e] < en_cut:
-                        print "%16.4f" % (en_percent[e],),
-                print
+                        print("%16.4f" % (en_percent[e],), end=' ')
+                print()
 
 
     def update_suff_p(self):
@@ -4659,7 +4659,7 @@ class MixtureModel(ProbDistribution):
             # initialize free parameters
             full_fp_0 = self.freeParams
             if not silent:
-                print "\n************* j = ",j,"*****************\n"
+                print("\n************* j = ",j,"*****************\n")
             term = 0            
             while not term:
                 nr_lead = len(self.leaders[j])
@@ -4677,10 +4677,10 @@ class MixtureModel(ProbDistribution):
                             merge_cand1 = self.leaders[j][i]
                             merge_cand2 = self.leaders[j][k]
                 if not silent:
-                    print "-------------------"
-                    print merge_cand1," -> ",merge_cand2," = ",min_dist
-                    print self.components[merge_cand1][j]
-                    print self.components[merge_cand2][j]
+                    print("-------------------")
+                    print(merge_cand1," -> ",merge_cand2," = ",min_dist)
+                    print(self.components[merge_cand1][j])
+                    print(self.components[merge_cand2][j])
                         
                 full_BIC_0 = -2*lk + (full_fp_0  * numpy.log(data.N))
                 # compute merged distribution of candidates with minimal KL distance
@@ -4698,7 +4698,7 @@ class MixtureModel(ProbDistribution):
                 candidate_dist.merge(merge_list, pi_list)
 
                 if not silent:
-                    print "candidate:", candidate_dist
+                    print("candidate:", candidate_dist)
 
                 # computing the new reduced model complexity
                 full_fp_1 = full_fp_0 - self.components[merge_cand1][j].freeParams
@@ -4716,9 +4716,9 @@ class MixtureModel(ProbDistribution):
                 new_groups[j].pop(merge_cand2)             
             
                 if not silent:
-                    print "\ncandidate model structure:"
-                    print "lead = ",new_leaders[j]
-                    print "groups = ",new_groups[j],"\n"
+                    print("\ncandidate model structure:")
+                    print("lead = ",new_leaders[j])
+                    print("groups = ",new_groups[j],"\n")
 		
         		# updating likelihood matrix
                 l_1 = copy.copy(l)
@@ -4746,17 +4746,17 @@ class MixtureModel(ProbDistribution):
                 AIC_1 = -2*lk_1 + ( 2 * full_fp_1 )
 
                 if not silent:                
-                    print "LK_0: ", lk
-                    print "LK_1: ", lk_1
+                    print("LK_0: ", lk)
+                    print("LK_1: ", lk_1)
 
-                    print "full_fp_0 =",full_fp_0
-                    print "full_fp_1 =",full_fp_1
+                    print("full_fp_0 =",full_fp_0)
+                    print("full_fp_1 =",full_fp_1)
                 
-                    print "\nfull_BIC_0 =",full_BIC_0
-                    print "full_BIC_1 =",full_BIC_1
+                    print("\nfull_BIC_0 =",full_BIC_0)
+                    print("full_BIC_1 =",full_BIC_1)
                 
-                    print "Vorher: AIC_0 =",AIC_0
-                    print "Nachher: AIC_1 =",AIC_1
+                    print("Vorher: AIC_0 =",AIC_0)
+                    print("Nachher: AIC_1 =",AIC_1)
             
                     #if  AIC_1 < AIC_0:
                     #    print "Merge accepted according to AIC"
@@ -4765,7 +4765,7 @@ class MixtureModel(ProbDistribution):
                 
                 if AIC_1 < AIC_0:
                     if not silent:
-                        print "\n*** Merge accepted !"
+                        print("\n*** Merge accepted !")
                     change += 1
 
                     # new_model.components[merge_cand1][j]
@@ -4787,11 +4787,11 @@ class MixtureModel(ProbDistribution):
                     # if only one group is left terminate, update free parameters and continue with next variable
                     if len(self.leaders[j]) == 1:
                         if not silent:
-                            print "*** Fully merged !"
+                            print("*** Fully merged !")
                         term = 1
                 else:
                     if not silent:
-                        print "\n*** Merge rejected: Abort !"
+                        print("\n*** Merge rejected: Abort !")
                     # finished with this variable, update free parameters and go on
                     term = 1
         
@@ -4862,7 +4862,7 @@ class MixtureModel(ProbDistribution):
                     break
             if len(candidate_dicts) > 0:
                 for c in candidate_dicts:
-                    toMerge.append(c.keys())
+                    toMerge.append(list(c.keys()))
 
         if len(toMerge) > 0:  # postprocess toMerge to remove single entry sets
             for i in range(len(toMerge)-1,-1,-1):
@@ -4881,7 +4881,7 @@ class MixtureModel(ProbDistribution):
             new_pi = self.pi.tolist()
             new_compFix = copy.copy(self.compFix)
             
-            l = d_merge.keys()
+            l = list(d_merge.keys())
             l.sort()
             l.reverse()
             for j in l:
@@ -4905,7 +4905,7 @@ class MixtureModel(ProbDistribution):
 
                 # update component indices in groups
                 for g_j in range(len(self.groups)):
-                    for g in self.groups[g_j].keys():
+                    for g in list(self.groups[g_j].keys()):
                         if g == j:
                             tmp = self.groups[g_j][g]
                             self.groups[g_j].pop(j)          
@@ -4917,7 +4917,7 @@ class MixtureModel(ProbDistribution):
 
                 # remove merged component from groups
                 for g_j in range(len(self.groups)):
-                    for g in self.groups[g_j].keys():
+                    for g in list(self.groups[g_j].keys()):
                         for gm in range(len(self.groups[g_j][g])-1,-1,-1):
                             if self.groups[g_j][g][gm] == j:
                                 self.groups[g_j][g].pop(gm)
@@ -4943,7 +4943,7 @@ class MixtureModel(ProbDistribution):
         self.G = self.G - 1  # update number of components
         tmp = self.pi.tolist() # update pi
         tmp.pop(ind)
-        tmp = map(lambda x: x / sum(tmp),tmp) # renormalize pi
+        tmp = [x / sum(tmp) for x in tmp] # renormalize pi
         self.pi = numpy.array(tmp,dtype='Float64')  # set new pi in model
         self.components.pop(ind)  # remove component
         if self.compFix:
@@ -4966,7 +4966,7 @@ class MixtureModel(ProbDistribution):
             # update groups
             for i,dg in enumerate(self.groups):
                 new_groups.append({})
-                for k in dg.keys():
+                for k in list(dg.keys()):
                     if k == ind:
                         # case ind is leader: remove ind and select new leader
                         gr = self.groups[i].pop(k)
@@ -4996,7 +4996,7 @@ class MixtureModel(ProbDistribution):
             self.identifiable()
 
     def merge(self,dlist, weights):
-        raise DeprecationWarning, 'Part of the outdated structure learning implementation.'
+        raise DeprecationWarning('Part of the outdated structure learning implementation.')
         coeff = 1.0 / ( len(dlist) +1 )
         m_pi = self.pi * coeff
         for i in range(len(dlist)):
@@ -5018,15 +5018,15 @@ class MixtureModel(ProbDistribution):
         if data:
             headers = data.headers
         else:
-            headers = range(self.dist_nr)    
+            headers = list(range(self.dist_nr))    
         for i in range(self.dist_nr):
-            print "Feature "+str(i)+": " + str(headers[i])
+            print("Feature "+str(i)+": " + str(headers[i]))
             for j,l in enumerate(self.leaders[i]):
                 if self.groups[i][l] == []:
-                    print "\tGroup "+str(j)+": "+"("+str(l)+")"
+                    print("\tGroup "+str(j)+": "+"("+str(l)+")")
                 else:
-                    print "\tGroup "+str(j)+": "+str(tuple([l]+self.groups[i][l]))
-                print "\t  ",self.components[l][i],"\n"
+                    print("\tGroup "+str(j)+": "+str(tuple([l]+self.groups[i][l])))
+                print("\t  ",self.components[l][i],"\n")
     
 
     def updateFreeParams(self):
@@ -5050,7 +5050,7 @@ class MixtureModel(ProbDistribution):
         """
         if self.struct == 0:
             return True
-        r = range(self.G)
+        r = list(range(self.G))
         try:
             # check valid entries in group and leader
             for j in range(self.dist_nr):
@@ -5061,14 +5061,14 @@ class MixtureModel(ProbDistribution):
             # check completeness of structure
             for j in range(self.dist_nr):
                 tmp = copy.copy(self.leaders[j])
-                for g in self.groups[j].keys():
+                for g in list(self.groups[j].keys()):
                     tmp += copy.copy(self.groups[j][g])
                 tmp.sort()
                 assert tmp == r
         except AssertionError:
-            print 'Invalid structure:',j
-            print self.leaders
-            print self.groups
+            print('Invalid structure:',j)
+            print(self.leaders)
+            print(self.groups)
             raise
 
     def sufficientStatistics(self, posterior, data):
@@ -5214,7 +5214,7 @@ class BayesMixtureModel(MixtureModel):
         @return: posterior assigments
         """
         if not isinstance(data,DataSet):
-            raise TypeError, "DataSet object required, got"+ str(data.__class__)
+            raise TypeError("DataSet object required, got"+ str(data.__class__))
         else:
             if data.internalData is None:
                 data.internalInit(self)
@@ -5260,7 +5260,7 @@ class BayesMixtureModel(MixtureModel):
                             else:    
                                 loc_l = l[i,:]
                                 # masking missing values from parameter estimation
-                                if data.missingSymbols.has_key(j):
+                                if j in data.missingSymbols:
                                     ind_miss = data.getMissingIndices(j)
                                     for k in ind_miss:
                                         loc_l[k] = 0.0
@@ -5272,10 +5272,10 @@ class BayesMixtureModel(MixtureModel):
         if fix_flag:
             if unfix_pi == 0.0:
                 #print "----\n",self,"----\n"
-                 print "unfix_pi = ", unfix_pi
-                 print "fix_pi = ", fix_pi
-                 print "pi = ", self.pi
-                 raise RuntimeError, "unfix_pi = 0.0"  
+                 print("unfix_pi = ", unfix_pi)
+                 print("fix_pi = ", fix_pi)
+                 print("pi = ", self.pi)
+                 raise RuntimeError("unfix_pi = 0.0")  
             for i in range(self.G):
                 if self.compFix[i] == 0:
                     self.pi[i] = (self.pi[i] * fix_pi) / unfix_pi
@@ -5352,16 +5352,16 @@ class BayesMixtureModel(MixtureModel):
         try:
             g_norm = g - sum_logs
         except FloatingPointError:
-            print sum_logs
+            print(sum_logs)
             raise
             
         tau = numpy.exp(g_norm)
 
         if not silent:
-            print "\ntau="
+            print("\ntau=")
             for tt in tau:
-                print tt.tolist()
-            print
+                print(tt.tolist())
+            print()
 
         # computing posterior as model selection criterion
         temp = DiscreteDistribution(self.G,self.pi)
@@ -5383,8 +5383,8 @@ class BayesMixtureModel(MixtureModel):
         lk = numpy.sum(sum_logs) 
         post = lk + log_prior
         if not silent:
-            print "0: ",  lk ,"+", log_prior,"=", post
-            print log_prior_list
+            print("0: ",  lk ,"+", log_prior,"=", post)
+            print(log_prior_list)
 
         changes = 0        
         g_wo_j = numpy.zeros((self.G, data.N),dtype='Float64')
@@ -5396,7 +5396,7 @@ class BayesMixtureModel(MixtureModel):
             L = {}  # initialize merge history
 
             if not silent:
-                print "\n************* j = ",j,"*****************\n"
+                print("\n************* j = ",j,"*****************\n")
 
             # unnormalized posterior matrix without the contribution of the jth feature
             try:
@@ -5414,8 +5414,8 @@ class BayesMixtureModel(MixtureModel):
 
             term = 0            
             if not silent:
-                print self.leaders
-                print self.groups
+                print(self.leaders)
+                print(self.groups)
 
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
@@ -5466,10 +5466,10 @@ class BayesMixtureModel(MixtureModel):
                     for mc2 in range(mc1+1,len(temp_leaders[j])):
                         merge_cand2 = temp_leaders[j][mc2]
                         if not silent:
-                            print "-------------------"
-                            print merge_cand1," -> ",merge_cand2
-                            print self.components[merge_cand1][j], '( sum(tau) = ',sum(tau[merge_cand1,:]),')'
-                            print self.components[merge_cand2][j], '( sum(tau) = ',sum(tau[merge_cand2,:]),')'
+                            print("-------------------")
+                            print(merge_cand1," -> ",merge_cand2)
+                            print(self.components[merge_cand1][j], '( sum(tau) = ',sum(tau[merge_cand1,:]),')')
+                            print(self.components[merge_cand2][j], '( sum(tau) = ',sum(tau[merge_cand2,:]),')')
 
                         nr_leaders_j = len(temp_leaders[j])-1
                         cand_group_j = temp_groups[j][merge_cand1] + [merge_cand2] + temp_groups[j][merge_cand2]
@@ -5480,25 +5480,25 @@ class BayesMixtureModel(MixtureModel):
                         
                         recomp = 0 
                         
-                        if L.has_key(hist_ind_complete):
+                        if hist_ind_complete in L:
                             recomp = 1
                         
                         if not silent:
-                            print "\ncandidate model structure: "
-                            print 'merge:',hist_ind_part1, hist_ind_part2, '->' ,hist_ind_complete
+                            print("\ncandidate model structure: ")
+                            print('merge:',hist_ind_part1, hist_ind_part2, '->' ,hist_ind_complete)
                             #print "lead = ",leaders_j
                             #print "groups = ",groups_j
                             #print "others = ",others,"\n"
 
                         if not recomp:
-                            assert L.has_key( hist_ind_part1),str(hist_ind_part1)+' missing.'
-                            assert L.has_key( hist_ind_part2),str(hist_ind_part2)+' missing.'
+                            assert hist_ind_part1 in L,str(hist_ind_part1)+' missing.'
+                            assert hist_ind_part2 in L,str(hist_ind_part2)+' missing.'
                             
                             M = self.prior.compPrior[j].mapMStepMerge([L[hist_ind_part1], L[hist_ind_part2]])
                             candidate_dist = M.dist
 
                             if not silent:
-                                print "candidate:", candidate_dist
+                                print("candidate:", candidate_dist)
 
                             l_row = candidate_dist.pdf(data_j)  
                             cdist_prior = self.prior.compPrior[j].pdf( candidate_dist ) 
@@ -5511,7 +5511,7 @@ class BayesMixtureModel(MixtureModel):
                             candidate_dist = L[hist_ind_complete].dist                            
 
                             if not silent:
-                                print "candidate:", candidate_dist
+                                print("candidate:", candidate_dist)
 
                             l_row = L[hist_ind_complete].l
                             cdist_prior = L[hist_ind_complete].dist_prior
@@ -5556,11 +5556,11 @@ class BayesMixtureModel(MixtureModel):
                         post_1 = lk_1 + log_prior_1
 
                         if not silent:
-                            print '\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1
+                            print('\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1)
 
                         if post_1 >= post:
                             if not silent:
-                                print "*** Merge accepted", post_1 ,">=", post
+                                print("*** Merge accepted", post_1 ,">=", post)
 
                             if post_1 > best_post:  # current merge is better than previous best
                                 best_dist = candidate_dist
@@ -5570,12 +5570,12 @@ class BayesMixtureModel(MixtureModel):
                                 best_log_prior_list_j = log_prior_list_j
                         else:
                             if not silent:
-                                print "*** Merge rejected:", post_1 ,"!>", post
+                                print("*** Merge rejected:", post_1 ,"!>", post)
 
                 # if there is no possible merge that increases the score we are done
                 if best_post == float('-inf'):
                     if not silent:
-                        print "*** Finished !"
+                        print("*** Finished !")
                     # setting updated structure in model
                     self.leaders[j] = temp_leaders[j]
                     self.groups[j] = temp_groups[j]
@@ -5587,10 +5587,10 @@ class BayesMixtureModel(MixtureModel):
                 # otherwise we update the model with the best merge found
                 else:  
                     if not silent:
-                        print "\n--- Winner ---"
-                        print "post:", best_post
-                        print "indices:",best_indices
-                        print "dist: ",best_dist
+                        print("\n--- Winner ---")
+                        print("post:", best_post)
+                        print("indices:",best_indices)
+                        print("dist: ",best_dist)
                         #print "lead:",best_leaders
                         #print "group:", best_groups
 
@@ -5656,10 +5656,10 @@ class BayesMixtureModel(MixtureModel):
         tau = numpy.exp(g_norm)
         
         if not silent:
-            print "\ntau="
+            print("\ntau=")
             for tt in tau:
-                print tt.tolist()
-            print
+                print(tt.tolist())
+            print()
 
         # computing posterior as model selection criterion
         temp = DiscreteDistribution(self.G,self.pi)
@@ -5681,8 +5681,8 @@ class BayesMixtureModel(MixtureModel):
         lk = numpy.sum(sum_logs) 
         best_post = lk + log_prior
         if not silent:
-            print "0: ",  lk ,"+", log_prior,"=", best_post
-            print log_prior_list
+            print("0: ",  lk ,"+", log_prior,"=", best_post)
+            print(log_prior_list)
 
         changes = 0        
         g_wo_j = numpy.zeros((self.G, data.N),dtype='Float64')
@@ -5694,7 +5694,7 @@ class BayesMixtureModel(MixtureModel):
             L = {}  # initialize merge history
 
             if not silent:
-                print "\n************* j = ",j,"*****************\n"
+                print("\n************* j = ",j,"*****************\n")
 
             # unnormalized posterior matrix without the contribution of the jth feature
             try:
@@ -5712,8 +5712,8 @@ class BayesMixtureModel(MixtureModel):
 
             term = 0            
             if not silent:
-                print self.leaders
-                print self.groups,'\n'
+                print(self.leaders)
+                print(self.groups,'\n')
                 
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
@@ -5759,9 +5759,9 @@ class BayesMixtureModel(MixtureModel):
             while 1:
                 curr_part = setPartitions.decode_partition(numpy.arange(self.G) ,kappa,max_kappa)
                 if not silent:
-                    print "\n-------------------"
+                    print("\n-------------------")
                     #print 'History:', L.keys()
-                    print 'Current structure:',kappa,'->',j ,curr_part
+                    print('Current structure:',kappa,'->',j ,curr_part)
                     
                     fullstruct = []
                     for jj in range(self.dist_nr):
@@ -5769,19 +5769,19 @@ class BayesMixtureModel(MixtureModel):
                             fullstruct.append( [tuple( [ll] + self.groups[jj][ll] ) for ll in self.leaders[jj]])
                         else:   
                             fullstruct.append(curr_part)
-                    print 'Full:' ,fullstruct
+                    print('Full:' ,fullstruct)
 
                 # computing change in likelihood matrix for this step
                 #l_j_1 = copy.copy(l[j]) 
                 l_j_1 = numpy.zeros( (self.G, data.N ) )  # XXX needs only be done once
 
                 for group in curr_part:
-                    if L.has_key(group):
+                    if group in L:
                         # retrieve merge data from history
                         candidate_dist = L[group].dist                            
 
                         if not silent:
-                            print "  candidate:", group, candidate_dist
+                            print("  candidate:", group, candidate_dist)
 
                         l_row = L[group].l
                         cdist_prior = L[group].dist_prior
@@ -5790,7 +5790,7 @@ class BayesMixtureModel(MixtureModel):
                         candidate_dist = M.dist
 
                         if not silent:
-                            print "  candidate:", group,candidate_dist
+                            print("  candidate:", group,candidate_dist)
 
                         l_row = candidate_dist.pdf(data_j)  
                         cdist_prior = self.prior.compPrior[j].pdf( candidate_dist ) 
@@ -5831,11 +5831,11 @@ class BayesMixtureModel(MixtureModel):
                 post_1 = lk_1 + log_prior_1
 
                 if not silent:
-                    print '\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1
+                    print('\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1)
 
                 if post_1 >= best_post: # current candidate structure is better than previous best
                     if not silent:
-                        print "*** New best candidate", post_1 ,">=", best_post
+                        print("*** New best candidate", post_1 ,">=", best_post)
                     best_post = post_1
                     best_partition = curr_part # XXX
                     best_l_j = l_j_1
@@ -5843,12 +5843,12 @@ class BayesMixtureModel(MixtureModel):
 
                 else:
                     if not silent:
-                        print "*** worse than previous best",best_partition,'(', post_1 ,"!>", best_post,')'
+                        print("*** worse than previous best",best_partition,'(', post_1 ,"!>", best_post,')')
                 
                 ret = prev_partition(kappa, max_kappa)
                 if ret == None:  # all candidate partitions have been scored
                     if not silent:
-                        print "*** Finished with post=",best_post
+                        print("*** Finished with post=",best_post)
                     # setting updated structure in model
                     lead = []
                     groups = {}
@@ -5912,10 +5912,10 @@ class BayesMixtureModel(MixtureModel):
         tau = numpy.exp(g_norm)
         
         if not silent:
-            print "\ntau="
+            print("\ntau=")
             for tt in tau:
-                print tt.tolist()
-            print
+                print(tt.tolist())
+            print()
 
         # computing posterior as model selection criterion
         temp = DiscreteDistribution(self.G,self.pi)
@@ -5937,11 +5937,11 @@ class BayesMixtureModel(MixtureModel):
             L = {}  # initialize merge history
 
             if not silent:
-                print "\n************* j = ",j,"*****************\n"
+                print("\n************* j = ",j,"*****************\n")
 
             # initialising starting group structure for feature j
             temp_leaders[j] =  [0]
-            temp_groups[j] = {0: range(1,self.G)}
+            temp_groups[j] = {0: list(range(1,self.G))}
 
             # unnormalized posterior matrix without the contribution of the jth feature
             try:
@@ -5954,8 +5954,8 @@ class BayesMixtureModel(MixtureModel):
             term = 0            
 
             if not silent:
-                print temp_leaders
-                print temp_groups
+                print(temp_leaders)
+                print(temp_groups)
 
             # extracting current feature from the DataSet
             if isinstance(self.components[0][j], MixtureModel): # XXX
@@ -6009,7 +6009,7 @@ class BayesMixtureModel(MixtureModel):
             
             post = lk + log_prior
             if not silent:
-                print "0: ",  lk ,"+", log_prior,"=", post
+                print("0: ",  lk ,"+", log_prior,"=", post)
 
             split_dist = copy.copy(self.components[0][j])  
             while not term:
@@ -6029,9 +6029,9 @@ class BayesMixtureModel(MixtureModel):
 
                     for mc1_grp in temp_groups[j][merge_cand1]:
                         if not silent:
-                            print "-------------------"
-                            print '*** leader '+str(merge_cand1)+': split',mc1_grp,'from',temp_groups[j][merge_cand1]
-                            print self.components[merge_cand1][j], '( sum(tau) = ',sum(tau[merge_cand1,:]),')'
+                            print("-------------------")
+                            print('*** leader '+str(merge_cand1)+': split',mc1_grp,'from',temp_groups[j][merge_cand1])
+                            print(self.components[merge_cand1][j], '( sum(tau) = ',sum(tau[merge_cand1,:]),')')
                             
                         # initialising candidate group structure with copies of the temporary structure
                         leaders_j = copy.copy(temp_leaders[j])
@@ -6050,10 +6050,10 @@ class BayesMixtureModel(MixtureModel):
                         groups_j[mc1_grp] = []
                         
                         if not silent:
-                            print "\ncandidate model structure:"
-                            print "lead = ",leaders_j
-                            print 'groups =',groups_j
-                            print j,[ (ll,)+tuple(groups_j[ll]) for ll in leaders_j ]
+                            print("\ncandidate model structure:")
+                            print("lead = ",leaders_j)
+                            print('groups =',groups_j)
+                            print(j,[ (ll,)+tuple(groups_j[ll]) for ll in leaders_j ])
                             
                         nr_leaders_j = len(temp_leaders[j])-1
                         
@@ -6070,7 +6070,7 @@ class BayesMixtureModel(MixtureModel):
                             # should never get here...
                             raise TypeError
                         if not silent:
-                            print "split dist:", split_dist
+                            print("split dist:", split_dist)
                         
                         # updating l_j_1 with the new split distribution
                         l_row = split_dist.pdf(data_j)    
@@ -6089,17 +6089,17 @@ class BayesMixtureModel(MixtureModel):
                         # computing parameters for group which has been split
                         recomp = 0
                         
-                        if L.has_key(hist_ind_remainder):
+                        if hist_ind_remainder in L:
                             recomp = 1
 
                         if not recomp:
-                            assert L.has_key( hist_ind_presplit),str(hist_ind_presplit)+' missing.'
-                            assert L.has_key( hist_ind_split),str(hist_ind_split)+' missing.'
+                            assert hist_ind_presplit in L,str(hist_ind_presplit)+' missing.'
+                            assert hist_ind_split in L,str(hist_ind_split)+' missing.'
                             M = self.prior.compPrior[j].mapMStepSplit(L[hist_ind_presplit], L[hist_ind_split])
                             remainder_dist = M.dist
 
                             if not silent:
-                                print "remainder dist:", remainder_dist
+                                print("remainder dist:", remainder_dist)
 
                             l_row = remainder_dist.pdf(data_j)  
                             remainder_dist_prior = self.prior.compPrior[j].pdf( remainder_dist ) 
@@ -6113,7 +6113,7 @@ class BayesMixtureModel(MixtureModel):
                             remainder_dist = L[hist_ind_remainder].dist                            
 
                             if not silent:
-                                print "remainder dist:", remainder_dist
+                                print("remainder dist:", remainder_dist)
 
                             l_row = L[hist_ind_remainder].l
                             remainder_dist_prior = L[hist_ind_remainder].dist_prior
@@ -6154,11 +6154,11 @@ class BayesMixtureModel(MixtureModel):
 
                         post_1 = lk_1 + log_prior_1
                         if not silent:
-                            print '\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1
+                            print('\nPosterior:',post_1 ,'=', lk_1 ,'+', log_prior_1)
 
                         if post_1 >= post:
                             if not silent:
-                                print "*** Split accepted", post_1 ,">=", post
+                                print("*** Split accepted", post_1 ,">=", post)
 
                             if post_1 > best_post:  # current merge is better than previous best
                                 best_split_dist = copy.copy(split_dist)
@@ -6173,12 +6173,12 @@ class BayesMixtureModel(MixtureModel):
                                 best_log_prior_list_j = log_prior_list_j
                         else:
                             if not silent:
-                                print "*** Split rejected:", post_1 ,"!>", post
+                                print("*** Split rejected:", post_1 ,"!>", post)
 
                 # if there is no possible split that increases the score we are done
                 if best_post == float('-inf'):
                     if not silent:
-                        print "*** Finished with post", post
+                        print("*** Finished with post", post)
                     # setting updated structure in model
                     self.leaders[j] = temp_leaders[j]
                     self.groups[j] = temp_groups[j]
@@ -6191,15 +6191,15 @@ class BayesMixtureModel(MixtureModel):
                 # otherwise we update the model with the best merge found
                 else:  
                     if not silent:
-                        print "\n--- Winner ---"
+                        print("\n--- Winner ---")
 
-                        print "post:", best_post
-                        print "indices:",best_indices
-                        print "remainder dist: ",best_remainder_dist
-                        print "split dist: ",best_split_dist
+                        print("post:", best_post)
+                        print("indices:",best_indices)
+                        print("remainder dist: ",best_remainder_dist)
+                        print("split dist: ",best_split_dist)
 
-                        print "lead:",best_leaders
-                        print "group:", best_groups
+                        print("lead:",best_leaders)
+                        print("group:", best_groups)
 
                     post = best_post
                     l[j] = best_l_j
@@ -6246,13 +6246,13 @@ class BayesMixtureModel(MixtureModel):
         
         comps.sort()
 
-        others = range(0,self.G) 
+        others = list(range(0,self.G)) 
         for c in comps:
             others.remove(c)        
 
         if not silent:
-            print 'comps',comps            
-            print 'others:',others
+            print('comps',comps)            
+            print('others:',others)
         
         # building data likelihood factor matrix for the current group structure      
         l = numpy.zeros( (self.dist_nr, self.G, data.N),dtype='Float64' )
@@ -6286,7 +6286,7 @@ class BayesMixtureModel(MixtureModel):
         for j in range(model.dist_nr):
             if len(model.leaders[j]) == 1:
                 if not silent:
-                    print 'Feature '+str(data.headers[j])+' uninformative.'
+                    print('Feature '+str(data.headers[j])+' uninformative.')
                 # if the feature is uninformative already the score is set to zero    
                 score.append( (0.0,j) )
                 continue
@@ -6294,7 +6294,7 @@ class BayesMixtureModel(MixtureModel):
                 # this whole section is more general than needed, might get optimized as some point
                 
                 if not silent:
-                    print '\nFeature '+str(data.headers[j])+' ( index '+str(j)+' ) usefull. '
+                    print('\nFeature '+str(data.headers[j])+' ( index '+str(j)+' ) usefull. ')
             
                 # data for the jth feature
                 if isinstance(model.components[0][j], MixtureModel):
@@ -6361,7 +6361,7 @@ class BayesMixtureModel(MixtureModel):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 sys.stdout.write("Parsing data set...")
@@ -6370,7 +6370,7 @@ class BayesMixtureModel(MixtureModel):
                 sys.stdout.write("done\n")
                 sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         assert objFunction in ['MAP']  # only MAP estimation for now
 
@@ -6411,11 +6411,11 @@ class BayesMixtureModel(MixtureModel):
                     best_logp = log_p
 
         if not silent:
-            print "\nBest model likelihood over ",nr_runs,"random initializations ( "+str(nr_runs - len(logp_list))+" runs failed):"
+            print("\nBest model likelihood over ",nr_runs,"random initializations ( "+str(nr_runs - len(logp_list))+" runs failed):")
             if len(logp_list) > 0:
-                print "Model likelihoods:",logp_list
-                print "Average logp: ", sum(logp_list)/len(logp_list)," SD:",numpy.array(logp_list).std()
-                print "Best logp:",best_logp
+                print("Model likelihoods:",logp_list)
+                print("Average logp: ", sum(logp_list)/len(logp_list)," SD:",numpy.array(logp_list).std())
+                print("Best logp:",best_logp)
 
         self.components = best_model.components  # assign best parameter set to model 'self'
         self.pi = best_model.pi
@@ -6442,7 +6442,7 @@ class BayesMixtureModel(MixtureModel):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 sys.stdout.write("Parsing data set...")
@@ -6451,14 +6451,14 @@ class BayesMixtureModel(MixtureModel):
                 sys.stdout.write("done\n")
                 sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
             
         seed_model = copy.copy(self)  # copying the model parameters 
         best_model = None
         best_model_logp = float('-inf')
         model_logp = []        
         for i in range(nr_runs):
-            print "i = " , i
+            print("i = " , i)
             best_seed_model = None
             best_seed_logp = float('-inf')
             seed_logp = []
@@ -6469,7 +6469,7 @@ class BayesMixtureModel(MixtureModel):
                 try:
                     (l,logp_i) = seed_model.mapEM(data,nr_seed_steps,0.1,silent=silent)    
                 except InvalidPosteriorDistribution:
-                    print "Invalid seed model discarded: ",j
+                    print("Invalid seed model discarded: ",j)
                     invalid_model = 1
                 
                 # only valid models are considered in the maximization
@@ -6494,10 +6494,10 @@ class BayesMixtureModel(MixtureModel):
                 model_logp.append(logp)
 
         if not silent:
-            print "\nBest model likelihood over ",nr_runs," repeats ( "+str(nr_runs - len(model_logp))+" runs failed):"
-            print "Model likelihoods:",model_logp
-            print "Average logp: ", sum(model_logp)/len(model_logp)," SD:",numpy.array(model_logp).std()
-            print "Best logp:",best_model_logp
+            print("\nBest model likelihood over ",nr_runs," repeats ( "+str(nr_runs - len(model_logp))+" runs failed):")
+            print("Model likelihoods:",model_logp)
+            print("Average logp: ", sum(model_logp)/len(model_logp)," SD:",numpy.array(model_logp).std())
+            print("Best logp:",best_model_logp)
 
         final_logp = numpy.array(model_logp,dtype='Float64')
         # assign best parameter set to model 'self' 
@@ -6523,7 +6523,7 @@ class BayesMixtureModel(MixtureModel):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 sys.stdout.write("Parsing data set...")
@@ -6532,7 +6532,7 @@ class BayesMixtureModel(MixtureModel):
                 sys.stdout.write("done\n")
                 sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         assert objFunction in ['MAP']  # only MAP estimation for now
         assert self.struct 
@@ -6559,11 +6559,11 @@ class BayesMixtureModel(MixtureModel):
                 ch = candidate_model.updateStructureBayesian(data,objFunction=objFunction,silent=1)  
             except ValueError:
                 error = 1
-                print 'ERROR: failed structure lerarning.'
+                print('ERROR: failed structure lerarning.')
                 continue
                     
             if not silent:
-                print "Changes = ",ch
+                print("Changes = ",ch)
             while ch != 0:
                 try:
                     if objFunction == 'MAP':
@@ -6573,9 +6573,9 @@ class BayesMixtureModel(MixtureModel):
                         raise TypeError 
                     ch = candidate_model.updateStructureBayesian(data,objFunction=objFunction,silent=1) 
                     if not silent:
-                        print "Changes = ",ch
+                        print("Changes = ",ch)
                 except ConvergenceFailureEM:
-                    print 'FAILURE:'
+                    print('FAILURE:')
                     error = 1
                     break
                         
@@ -6583,7 +6583,7 @@ class BayesMixtureModel(MixtureModel):
                 # DEBUG: check structure validity
                 self.validStructure()
             except AssertionError:
-                print 'ERROR: Produced invalid structure'
+                print('ERROR: Produced invalid structure')
                 error = 1                
             if not error:
                 try: 
@@ -6612,10 +6612,10 @@ class BayesMixtureModel(MixtureModel):
         # update free parameters 
         self.updateFreeParams()
         if not silent:
-            print 'Structural EM (',nr_repeats,' runs over',nr_runs,'random inits each):'
-            print 'logp:',logp_list
-            print "Average logp: ", sum(logp_list)/len(logp_list)," SD:",numpy.array(logp_list).std()
-            print "Best logp:",best_logp
+            print('Structural EM (',nr_repeats,' runs over',nr_runs,'random inits each):')
+            print('logp:',logp_list)
+            print("Average logp: ", sum(logp_list)/len(logp_list)," SD:",numpy.array(logp_list).std())
+            print("Best logp:",best_logp)
         return best_logp            
 
 
@@ -6625,7 +6625,7 @@ class BayesMixtureModel(MixtureModel):
         # if there have been changes to the number of
         # components the prior needs to be updated
         if d is not None:
-            l = d.keys()
+            l = list(d.keys())
             l.sort()
             l.reverse()
             alpha = self.prior.piPrior.alpha.tolist()
@@ -6789,7 +6789,7 @@ class LabeledMixtureModel(MixtureModel):
                     #print "x[",j,"] = ", data.getInternalFeature(j)
                     #print "l[:,",j,"] = ", log_l[:,j] 
                     #print 'data[',j,'] = ',data.dataMatrix[j]
-                    raise InvalidPosteriorDistribution, "Invalid posterior distribution."
+                    raise InvalidPosteriorDistribution("Invalid posterior distribution.")
             # for valid posterior, normalize and go on    
             else:
                 # normalizing log posterior
@@ -6816,7 +6816,7 @@ class LabeledMixtureModel(MixtureModel):
         assert data.noLabels <= self.G, 'Number of components should be equal or greater than the number of label classes'
 
         if not isinstance(data,DataSet):
-            raise TypeError, "DataSet object required, got"+ str(data.__class__)
+            raise TypeError("DataSet object required, got"+ str(data.__class__))
         else:
             if data.internalData is None:
                 data.internalInit(self)
@@ -6876,10 +6876,10 @@ class LabeledMixtureModel(MixtureModel):
         if fix_flag:
             if unfix_pi == 0.0:
                 #print "----\n",self,"----\n"
-                 print "unfix_pi = ", unfix_pi
-                 print "fix_pi = ", fix_pi
-                 print "pi = ", self.pi
-                 raise RuntimeError, "unfix_pi = 0.0"  
+                 print("unfix_pi = ", unfix_pi)
+                 print("fix_pi = ", fix_pi)
+                 print("pi = ", self.pi)
+                 raise RuntimeError("unfix_pi = 0.0")  
 
             for i in range(self.G):
                 if self.compFix[i] == 0:
@@ -6956,7 +6956,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         assert self.G >= len(data.labels), 'Insufficent number of components for given labeling.'
 
         if not isinstance(data,ConstrainedDataSet):
-            raise TypeError, "DataSet object required, got"+ str(data.__class__)
+            raise TypeError("DataSet object required, got"+ str(data.__class__))
 
         else:
             if data.internalData is None:
@@ -7021,7 +7021,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                             else:    
                                 loc_l = l[i,:]
                                 # masking missing values from parameter estimation
-                                if data.missingSymbols.has_key(j):
+                                if j in data.missingSymbols:
                                     ind_miss = data.getMissingIndices(j)
                                     for k in ind_miss:
                                         loc_l[k] = 0.0
@@ -7035,10 +7035,10 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         if fix_flag:
             if unfix_pi == 0.0:
                 #print "----\n",self,"----\n"
-                 print "unfix_pi = ", unfix_pi
-                 print "fix_pi = ", fix_pi
-                 print "pi = ", self.pi
-                 raise RuntimeError, "unfix_pi = 0.0"  
+                 print("unfix_pi = ", unfix_pi)
+                 print("fix_pi = ", fix_pi)
+                 print("pi = ", self.pi)
+                 raise RuntimeError("unfix_pi = 0.0")  
 
             for i in range(self.G):
                 if self.compFix[i] == 0:
@@ -7067,7 +7067,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         assert self.G >= len(data.labels), 'Insufficent number of components for given labeling.'
 
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 if not silent:
@@ -7078,7 +7078,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         log_p_old = float('-inf')
         step = 0
@@ -7133,7 +7133,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                 log_prior = self.prior.pdf(self)
             except ValueError:  # catch zero probability under prior
                 
-                raise ConvergenceFailureEM,"Zero probability under prior." 
+                raise ConvergenceFailureEM("Zero probability under prior.") 
     
             # calculate objective function
             log_p += log_prior
@@ -7149,7 +7149,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             if diff < 0.0 and step > 1 and abs(diff / log_p_old) > self.err_tol:
                 #print log_p,log_p_old, diff,step,abs(diff / log_p_old)
                 #print "WARNING: EM divergent."
-                raise ConvergenceFailureEM,"Convergence failed, EM divergent: "  
+                raise ConvergenceFailureEM("Convergence failed, EM divergent: ")  
                                 
             if (not tilt or (tilt and step+1 >= self.nr_tilt_steps)) and delta >= diff and max_iter != 1: 
                 if not silent:
@@ -7230,10 +7230,10 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             if fix_flag:
                 if unfix_pi == 0.0:
                     #print "----\n",self,"----\n"
-                    print "unfix_pi = ", unfix_pi
-                    print "fix_pi = ", fix_pi
-                    print "pi = ", self.pi
-                    raise RuntimeError, "unfix_pi = 0.0"  
+                    print("unfix_pi = ", unfix_pi)
+                    print("fix_pi = ", fix_pi)
+                    print("pi = ", self.pi)
+                    raise RuntimeError("unfix_pi = 0.0")  
                 for i in range(self.G):
                     if self.compFix[i] == 0:
                         self.pi[i] = (self.pi[i] * fix_pi) / unfix_pi
@@ -7282,7 +7282,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         # XXX there should be a more efficient way to do this ... XXX 
         for i,cl in enumerate(data.labels): # for each class
             for o in cl: # for each observation in a class
-                ind = range(self.G)
+                ind = list(range(self.G))
                 ind.pop(i)
                 for ng in ind:
                     l[:,ng,o] = float('-inf')
@@ -7297,10 +7297,10 @@ class labeledBayesMixtureModel(BayesMixtureModel):
 
         tau = numpy.exp(g_norm)
         if not silent:
-            print "\ntau="
+            print("\ntau=")
             for tt in tau:
-                print tt.tolist()
-            print
+                print(tt.tolist())
+            print()
 
         # computing posterior as model selection criterion
         temp = DiscreteDistribution(self.G,self.pi)
@@ -7322,8 +7322,8 @@ class labeledBayesMixtureModel(BayesMixtureModel):
         lk = numpy.sum(sum_logs) 
         post = lk + log_prior
         if not silent:
-            print "0: ",  lk ,"+", log_prior,"=", post
-            print log_prior_list
+            print("0: ",  lk ,"+", log_prior,"=", post)
+            print(log_prior_list)
 
         changes = 0        
         g_wo_j = numpy.zeros((self.G, data.N),dtype='Float64')
@@ -7335,7 +7335,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             L = {}  # initialize merge history
 
             if not silent:
-                print "\n************* j = ",j,"*****************\n"
+                print("\n************* j = ",j,"*****************\n")
 
             # unnormalized posterior matrix without the contribution of the jth feature
             try:
@@ -7384,10 +7384,10 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                     for mc2 in range(mc1+1,len(temp_leaders[j])):
                         merge_cand2 = temp_leaders[j][mc2]
                         if not silent:
-                            print "-------------------"
-                            print merge_cand1," -> ",merge_cand2
-                            print self.components[merge_cand1][j]
-                            print self.components[merge_cand2][j]
+                            print("-------------------")
+                            print(merge_cand1," -> ",merge_cand2)
+                            print(self.components[merge_cand1][j])
+                            print(self.components[merge_cand2][j])
 
                         nr_leaders_j = len(temp_leaders[j])-1
                         cand_group_j = temp_groups[j][merge_cand1] + [merge_cand2] + temp_groups[j][merge_cand2]
@@ -7398,24 +7398,24 @@ class labeledBayesMixtureModel(BayesMixtureModel):
 
 
                         recomp = 0
-                        if L.has_key(hist_ind_complete):
+                        if hist_ind_complete in L:
                             recomp = 1
                         if not silent:
-                            print "\ncandidate model structure: XXX"
+                            print("\ncandidate model structure: XXX")
                             #print "lead = ",leaders_j
                             #print "groups = ",groups_j
                             #print "others = ",others,"\n"
 
                         if not recomp:
-                            assert L.has_key( hist_ind_part1),str(hist_ind_part1)+' missing.'
-                            assert L.has_key( hist_ind_part2),str(hist_ind_part2)+' missing.'
+                            assert hist_ind_part1 in L,str(hist_ind_part1)+' missing.'
+                            assert hist_ind_part2 in L,str(hist_ind_part2)+' missing.'
                             
                             M = self.prior.compPrior[j].mapMStepMerge([L[hist_ind_part1], L[hist_ind_part2]])
 
                             candidate_dist = M.dist
 
                             if not silent:
-                                print "candidate:", candidate_dist
+                                print("candidate:", candidate_dist)
 
                             l_row = candidate_dist.pdf(data_j)  
                             cdist_prior = self.prior.compPrior[j].pdf( candidate_dist ) 
@@ -7427,7 +7427,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                             # retrieve merge data from history
                             candidate_dist = L[hist_ind_complete].dist                            
                             if not silent:
-                                print "candidate:", candidate_dist
+                                print("candidate:", candidate_dist)
 
                             l_row = L[hist_ind_complete].l
                             cdist_prior = L[hist_ind_complete].dist_prior
@@ -7443,7 +7443,7 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                         # applying labels 
                         for i,cl in enumerate(data.labels): # for each class
                             for o in cl: # for each observation in a class
-                                ind = range(self.G)
+                                ind = list(range(self.G))
                                 ind.pop(i)
                                 for ng in ind:
                                     l_j_1[ng,o] = float('-inf')
@@ -7481,11 +7481,11 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                         post_1 = lk_1 + log_prior_1
 
                         if not silent:
-                            print 'Posterior:',post_1 ,'=', lk_1 ,'+', log_prior_1
+                            print('Posterior:',post_1 ,'=', lk_1 ,'+', log_prior_1)
 
                         if post_1 >= post:
                             if not silent:
-                                print "*** Merge accepted", post_1 ,">=", post
+                                print("*** Merge accepted", post_1 ,">=", post)
 
                             if post_1 > best_post:  # current merge is better than previous best
                                 best_dist = candidate_dist
@@ -7495,12 +7495,12 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                                 best_log_prior_list_j = log_prior_list_j
                         else:
                             if not silent:
-                                print "*** Merge rejected:", post_1 ,"!>", post
+                                print("*** Merge rejected:", post_1 ,"!>", post)
 
                 # if there is no possible merge that increases the score we are done
                 if best_post == float('-inf'):
                     if not silent:
-                        print "*** Finished !"
+                        print("*** Finished !")
                     # setting updated structure in model
                     self.leaders[j] = temp_leaders[j]
                     self.groups[j] = temp_groups[j]
@@ -7511,10 +7511,10 @@ class labeledBayesMixtureModel(BayesMixtureModel):
                 # otherwise we update the model with the best merge found
                 else:  
                     if not silent:
-                        print "--- Winner ---"
-                        print "post:", best_post
-                        print "indices:",best_indices
-                        print "dist: ",best_dist
+                        print("--- Winner ---")
+                        print("post:", best_post)
+                        print("indices:",best_indices)
+                        print("dist: ",best_dist)
                         #print "lead:",best_leaders
                         #print "group:", best_groups
 
@@ -7581,13 +7581,13 @@ class labeledBayesMixtureModel(BayesMixtureModel):
             for i in range(data.N):
                 cluster[c[i]].append(data.sampleIDs[i])
         
-            print "\n** Clustering **"
+            print("\n** Clustering **")
             for j in range(self.G):
-                print "Cluster ",j,', size',len(cluster[j])
-                print cluster[j], "\n" 
+                print("Cluster ",j,', size',len(cluster[j]))
+                print(cluster[j], "\n") 
         
-            print "Unassigend due to entropy cutoff:"
-            print cluster[-1], "\n"
+            print("Unassigend due to entropy cutoff:")
+            print(cluster[-1], "\n")
 
 
         return c
@@ -7671,7 +7671,7 @@ class ConstrainedMixtureModel(MixtureModel):
         """
 
         if not isinstance(data,ConstrainedDataSet):
-            raise TypeError, "DataSet object required, got"+ str(data.__class__)
+            raise TypeError("DataSet object required, got"+ str(data.__class__))
 
         else:
             if data.internalData is None:
@@ -7739,7 +7739,7 @@ class ConstrainedMixtureModel(MixtureModel):
                             else:    
                                 loc_l = l[i,:]
                                 # masking missing values from parameter estimation
-                                if data.missingSymbols.has_key(j):
+                                if j in data.missingSymbols:
                                     ind_miss = data.getMissingIndices(j)
                                     for k in ind_miss:
                                         loc_l[k] = 0.0
@@ -7752,10 +7752,10 @@ class ConstrainedMixtureModel(MixtureModel):
         if fix_flag:
             if unfix_pi == 0.0:
                 #print "----\n",self,"----\n"
-                 print "unfix_pi = ", unfix_pi
-                 print "fix_pi = ", fix_pi
-                 print "pi = ", self.pi
-                 raise RuntimeError, "unfix_pi = 0.0"  
+                 print("unfix_pi = ", unfix_pi)
+                 print("fix_pi = ", fix_pi)
+                 print("pi = ", self.pi)
+                 raise RuntimeError("unfix_pi = 0.0")  
 
             for i in range(self.G):
                 if self.compFix[i] == 0:
@@ -7839,7 +7839,7 @@ class ConstrainedMixtureModel(MixtureModel):
         log_col_sum_nopen[i] = sumlogs(log_l[:,i]) # sum over jth column of log_l without penalization
       
         #changing order of indices assigments
-        indices = range(data.N)
+        indices = list(range(data.N))
 
         random.shuffle(indices)
         
@@ -7936,12 +7936,12 @@ class ConstrainedMixtureModel(MixtureModel):
                 # if self is at the top of hierarchy, the model is unable to produce the
                 # sequence and an exception is raised. Otherwise normalization is not necessary.
                 if mix_posterior is None and not mix_pi:
-                    print "\n---- Invalid -----\n",self,"\n----------"
+                    print("\n---- Invalid -----\n",self,"\n----------")
                     #print "\n---------- Invalid ---------------"
-                    print "mix_pi = ", mix_pi
+                    print("mix_pi = ", mix_pi)
                     #print "x[",i,"] = ", sequence[j]
-                    print "l[:,",i,"] = ", log_l[:,i] 
-                    raise InvalidPosteriorDistribution, "Invalid posterior distribution."
+                    print("l[:,",i,"] = ", log_l[:,i]) 
+                    raise InvalidPosteriorDistribution("Invalid posterior distribution.")
           # for valid posterior, normalize and go on    
           else:
                 # normalizing log posterior
@@ -8004,7 +8004,7 @@ class ConstrainedMixtureModel(MixtureModel):
         @return: log-likelihood of winning model
         """
         if isinstance(data, numpy.ndarray):
-            raise TypeError, "DataSet object required."
+            raise TypeError("DataSet object required.")
         elif  isinstance(data, DataSet):
             if data.internalData is None:
                 if not silent:
@@ -8015,7 +8015,7 @@ class ConstrainedMixtureModel(MixtureModel):
                     sys.stdout.write("done\n")
                     sys.stdout.flush()
         else:    
-            raise ValueError, "Unknown input type format: " + str(data.__class__)
+            raise ValueError("Unknown input type format: " + str(data.__class__))
 
         logp_list = []
         best_logp = float('-inf')
@@ -8051,14 +8051,14 @@ class ConstrainedMixtureModel(MixtureModel):
                     best_logp = log_p
                     best_l = copy.copy(l)
         if not silent:
-            print "\nBest model likelihood over ",nr_runs,"random initializations:"
-            print "Model likelihoods:",logp_list
-            print "Average logp: ", sum(logp_list)/float(nr_runs)," SD:",numpy.array(logp_list).std()
-            print "Best logp:",best_logp
+            print("\nBest model likelihood over ",nr_runs,"random initializations:")
+            print("Model likelihoods:",logp_list)
+            print("Average logp: ", sum(logp_list)/float(nr_runs)," SD:",numpy.array(logp_list).std())
+            print("Best logp:",best_logp)
 
         # check whether at least one run was sucessfully completed        
         if best_model == None:
-            raise ConvergenceFailureEM, 'All '+ str(nr_runs)+' runs have failed.'
+            raise ConvergenceFailureEM('All '+ str(nr_runs)+' runs have failed.')
         
         self.components = best_model.components  # assign best parameter set to model 'self'
         self.pi = best_model.pi
@@ -8157,9 +8157,9 @@ def modelSelection(data,models, silent=False):
         AIC.append(AIC_G)
         
     if not silent:
-        print "NEC = ", NEC
-        print "BIC = ", BIC
-        print "AIC = ", AIC
+        print("NEC = ", NEC)
+        print("BIC = ", BIC)
+        print("AIC = ", AIC)
 
 
     NEC_min = numpy.argmin(numpy.array(NEC,dtype='Float64'))
@@ -8167,11 +8167,11 @@ def modelSelection(data,models, silent=False):
     BIC_min = numpy.argmin(numpy.array(BIC,dtype='Float64'))
 
     if not silent:
-        print G_list
-        print '**',NEC_min
-        print "Minimal NEC at G = "+str(G_list[NEC_min])+" with "+ str(NEC[NEC_min])
-        print "Minimal BIC at G = "+str(G_list[BIC_min])+" with "+ str(BIC[BIC_min])
-        print "Minimal AIC at G = "+str(G_list[AIC_min])+" with "+ str(AIC[AIC_min])
+        print(G_list)
+        print('**',NEC_min)
+        print("Minimal NEC at G = "+str(G_list[NEC_min])+" with "+ str(NEC[NEC_min]))
+        print("Minimal BIC at G = "+str(G_list[BIC_min])+" with "+ str(BIC[BIC_min]))
+        print("Minimal AIC at G = "+str(G_list[AIC_min])+" with "+ str(AIC[AIC_min]))
 
     return (NEC,BIC,AIC)
 
@@ -8203,7 +8203,7 @@ def kl_dist(d1,d2):
         return kl_dist(d1[0], d2[0])
     
     else:
-        raise TypeError, "Type mismatch or distribution not yet supported by kl_dist: "+str(d1.__class__)+", "+str(d2.__class__)
+        raise TypeError("Type mismatch or distribution not yet supported by kl_dist: "+str(d1.__class__)+", "+str(d2.__class__))
 
 
 def sym_kl_dist(d1,d2):
@@ -8230,7 +8230,7 @@ def sym_kl_dist(d1,d2):
             d21 += d2.pi[i] * kl_dist(d2.components[i],d1.components[i])
         dist = (d12 + d21 ) / 2.0
     else:
-        raise TypeError,str(d1.__class__)+" != "+str(d2.__class__)
+        raise TypeError(str(d1.__class__)+" != "+str(d2.__class__))
 
     if dist < 0.0:
         #raise ValueError,"Negative distance in sym_kl_dist."
@@ -8266,7 +8266,7 @@ def computeErrors(classes, clusters):
     classList = []
     clustList = []
     # samples with cluster or class label -1 are excluded 
-    for i in xrange(len(classes)):
+    for i in range(len(classes)):
         if clusters[i] != -1 and classes[i] != -1:
             classList.append(classes[i])
             clustList.append(clusters[i])
@@ -8275,8 +8275,8 @@ def computeErrors(classes, clusters):
         #    print i,'discarded:' ,  classes[i] , clusters[i]       
                     
     # For all unordered pairs
-    for i in xrange(len(classList)):
-        for j in xrange(i+1, len(classList)):
+    for i in range(len(classList)):
+        for j in range(i+1, len(classList)):
             if classList[i] == classList[j]: # (i,j) is a positive
                 if clustList[i] == clustList[j]:
                     tp += 1
@@ -8468,7 +8468,7 @@ def dict_intersection(d1, d2):
     """
     int_dict = {}
     for e in d2:
-        if d1.has_key(e):
+        if e in d1:
             int_dict[e] = 1
 
     return int_dict
@@ -8513,7 +8513,7 @@ def writeMixture( model, fileName,silent=False):
         f.write(l)
     
     if not silent:
-        print "Model written to file " + str(fileName)+"."
+        print("Model written to file " + str(fileName)+".")
     f.close()
         
 def readMixture(fileName):
@@ -8535,7 +8535,7 @@ def readMixture(fileName):
         struct = 1
         [offset,head,G,pi,compFix,leaders,groups] = split(s,';')
     else:
-        raise IOError, 'Flat file format not recognized.'
+        raise IOError('Flat file format not recognized.')
     if leaders and groups:
         mixModel = parseMix(f,head,int(G),simple_eval(pi),simple_eval(compFix),simple_eval(leaders),simple_eval(groups))
     else:
@@ -8580,7 +8580,7 @@ def parseMix(fileHandle,mtype,G,pi,compFix,leaders = None,groups = None):
             for lead in m.leaders[i]:
                 for g in m.groups[i][lead]:
                     if not m.components[lead][i] == m.components[g][i]:
-                        raise IOError, 'Incompatible CSI structure and parameter values in parseMix.'
+                        raise IOError('Incompatible CSI structure and parameter values in parseMix.')
                     m.components[g][i] = m.components[lead][i]
     return m 
 
@@ -8663,7 +8663,7 @@ def parseFile(fileHandle):
         [offset,head,G,M,pi] =  l          
         return parseDirichletMixPrior(fileHandle,int(G),int(M),simple_eval(pi))
     else:
-        raise TypeError, "Unknown keyword: " + str(l[1])
+        raise TypeError("Unknown keyword: " + str(l[1]))
 
 def chomp(string):
     """
@@ -8708,10 +8708,10 @@ def atom(next, token):
     raise SyntaxError("malformed expression (%s)" % token[1])
 
 def simple_eval(source):
-    src = cStringIO.StringIO(source).readline
+    src = io.StringIO(source).readline
     src = tokenize.generate_tokens(src)
     src = (token for token in src if token[0] is not tokenize.NL)
-    res = atom(src.next, src.next())
+    res = atom(src.__next__, next(src))
     if src.next()[0] is not tokenize.ENDMARKER:
         raise SyntaxError("bogus data after expression")
     return res 

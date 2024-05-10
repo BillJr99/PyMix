@@ -33,7 +33,7 @@ PlotMixture implements visualization functions for mixture models and clustering
 """
 
 import pylab
-import mixture
+from . import mixture
 import numpy
 
 
@@ -105,13 +105,13 @@ def plotClustering(data, labels, axis=None, title = None, markersize=5):
     # first extract unique labels from labels, we assume labels are consistent with trueLabels (XXX?)
     d = {}
     for l in labels:
-        if not d.has_key(l):
+        if l not in d:
             d[l] = 1
-    label_alphabet = d.keys()
+    label_alphabet = list(d.keys())
     #print label_alphabet
 
     if len(label_alphabet) > 4:
-        print "XXX Not enough colors specified to plot clustering. XXX"
+        print("XXX Not enough colors specified to plot clustering. XXX")
         raise RuntimeError
    
    
@@ -187,18 +187,18 @@ def plotClusterEval(data, predLabels, trueLabels ,axis=None):
     # first extract unique labels from predLabels, we assume labels are consistent with trueLabels (XXX?)
     d = {}
     for l in predLabels:
-        if not d.has_key(l):
+        if l not in d:
             d[l] = 1
     
     
     
-    label_alphabet = d.keys()
+    label_alphabet = list(d.keys())
     
-    print label_alphabet
+    print(label_alphabet)
 
     nr_labels = len(label_alphabet)
     if nr_labels > 4:
-        print "XXX Not enough colors specified to plot clustering. XXX"
+        print("XXX Not enough colors specified to plot clustering. XXX")
         raise RuntimeError
    
     # build color dictionary for true labels
@@ -417,14 +417,14 @@ def plotMixtureEntropy(mix, axis):
     
     #print "z", len(z),'x', len(z[0]) ,'=', len(z) * len(z[0])
     
-    print "max",z.max()
+    print("max",z.max())
     #max_val = z.max()
     
     max_val = numpy.log(mix.G) # maximum entropy for a vector of length mix.G
-    print "theor. max", max_val
+    print("theor. max", max_val)
     
     step = max_val / 10.0
-    print "step",step
+    print("step",step)
 
     #pylab.figure(1)
     #pylab.contour(x,y,z)
@@ -487,14 +487,14 @@ def plotPosteriorMax(mix, axis):
     
     #print "z", len(z),'x', len(z[0]) ,'=', len(z) * len(z[0])
     
-    print "max",z.max()
+    print("max",z.max())
     #max_val = z.max()
     
     max_val = numpy.log(mix.G) # maximum entropy for a vector of length mix.G
-    print "theor. max", max_val
+    print("theor. max", max_val)
     
     step = max_val / 40.0
-    print "step",step
+    print("step",step)
 
     #pylab.figure(1)
     #pylab.contour(x,y,z)
@@ -597,7 +597,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
         # set xticks
         #pylab.xticks( numpy.arange(len(headers))+0.5,['']*len(headers), size=12)
         xtickpos = numpy.arange(0.0, mix.G+1,0.5)
-        temp = zip(range(mix.G), ['']*mix.G)
+        temp = list(zip(list(range(mix.G)), ['']*mix.G))
         xticklabels = []
         for tt in temp:
             xticklabels += list(tt) 
@@ -617,7 +617,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
 
         # set yticks
         ytickpos = numpy.arange(0.0, len(headers),0.5)
-        temp = zip(headers, ['']*len(headers))
+        temp = list(zip(headers, ['']*len(headers)))
         
         yticklabels = []
         for tt in temp:
@@ -677,19 +677,19 @@ def plotMixtureStructure(mix,headers,transpose=1):
         #pylab.xticks( numpy.arange(len(headers))+0.5,['']*len(headers), size=12)
 
         xtickpos = numpy.arange(0.0, len(headers),0.5)
-        temp = zip(headers, ['']*len(headers))
+        temp = list(zip(headers, ['']*len(headers)))
 
         xticklabels = []
         for tt in temp:
             xticklabels += list(tt) 
         pylab.xticks( xtickpos,xticklabels) # rotation='vertical',size=12
 
-        print len(xtickpos), xtickpos.tolist()
-        print len(xticklabels), xticklabels
+        print(len(xtickpos), xtickpos.tolist())
+        print(len(xticklabels), xticklabels)
 
         # remove grid lines for tick lines at label positions
         xgridlines = pylab.getp(pylab.gca(), 'xgridlines')
-        print  xgridlines
+        print(xgridlines)
         
         for j in range(len(xticklabels)):
             if xticklabels[j] != '':
@@ -698,7 +698,7 @@ def plotMixtureStructure(mix,headers,transpose=1):
 
         # set yticks
         ytickpos = numpy.arange(0.0, mix.G,0.5)
-        temp = zip(range(mix.G), ['']*mix.G)
+        temp = list(zip(list(range(mix.G)), ['']*mix.G))
         
         yticklabels = []
         for tt in temp:
@@ -706,8 +706,8 @@ def plotMixtureStructure(mix,headers,transpose=1):
      
         pylab.yticks( ytickpos, yticklabels, size=12)
 
-        print len(ytickpos), ytickpos.tolist()
-        print len(yticklabels), yticklabels
+        print(len(ytickpos), ytickpos.tolist())
+        print(len(yticklabels), yticklabels)
 
         # remove grid lines for tick lines at label positions
         ygridlines = pylab.getp(pylab.gca(), 'ygridlines')
@@ -730,7 +730,7 @@ def plotFeatureRanks(model, comp_list, data, axis, title= None):
     
     raise NotImplementedError
     ranks = model.KLFeatureRanks(data, comp_list)
-    print ranks
+    print(ranks)
     # XXX 
 
 #----------------------------------------------------------------------------------------
@@ -823,7 +823,7 @@ class Simplex2D(object):
     
     def construct_vertices(self):
         """Constructs the vertices of the simplex."""
-        vertices = range(self.dimension)
+        vertices = list(range(self.dimension))
         if not self.invert:
             vertices = numpy.pi/2 - 2 * numpy.pi / self.dimension * (numpy.array(vertices) + 1.0/2)
         else:
@@ -921,7 +921,7 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
 
     # These are the vertex labels, converted to strings.
     labels = numpy.eye(dimension, dtype=int)
-    labels = map(str, map(tuple, labels))
+    labels = list(map(str, list(map(tuple, labels))))
 
     # Let's create the simplex.
     simplex = Simplex2D(labels, modify_labels=False)
@@ -947,12 +947,12 @@ def plotDirichletDensity(dirichlet_dist,title='DirichletDensity'):
         y_row = []
         d_row = []
         for d in drow:
-            if (1.0 - numpy.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
+            if (1.0 - numpy.sum(list(map(f,d)))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
                 d_row.append( numpy.exp( dirichlet_dist.pdf(mixture.DiscreteDistribution(3, d)) ))
             else:
                 d_row.append( 0.0)
             
-            sample_dist = dict(zip(labels, d))  
+            sample_dist = dict(list(zip(labels, d)))  
             pp = simplex.project_distribution(sample_dist, use_logs=False)
             x_row.append(pp[0])
             y_row.append(pp[1])
@@ -1001,7 +1001,7 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
 
     # These are the vertex labels, converted to strings.
     labels = numpy.eye(dimension, dtype=int)
-    labels = map(str, map(tuple, labels))
+    labels = list(map(str, list(map(tuple, labels))))
 
     # Let's create the simplex.
     simplex = Simplex2D(labels, modify_labels=False)
@@ -1018,7 +1018,7 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
             d_row.append([p1,p2,p3])
         dist.append(d_row)
     
-    sample_dist = dict(zip(labels, ref_dist.phi))
+    sample_dist = dict(list(zip(labels, ref_dist.phi)))
     proj_ref = simplex.project_distribution(sample_dist, use_logs=False)
     
     
@@ -1034,7 +1034,7 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
             #print d, 1.0 - numpy.sum(map(f,d))
             
             
-            if (1.0 - numpy.sum(map(f,d))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
+            if (1.0 - numpy.sum(list(map(f,d)))) < 1e-15 and d[0] > 0 and d[1] > 0 and d[2] > 0.0:
                 #print ref_dist,mixture.DiscreteDistribution(3, d), mixture.sym_kl_dist(  ref_dist, mixture.DiscreteDistribution(3, d))
                 if objf == 'sym':
                     d_row.append( mixture.sym_kl_dist(  ref_dist, mixture.DiscreteDistribution(3, d)))
@@ -1048,7 +1048,7 @@ def plotKLDistance(ref_dist, objf='sym' ,title='KL Distance', show=True):
             else:
                 d_row.append( 0.0)
             
-            sample_dist = dict(zip(labels, d))  
+            sample_dist = dict(list(zip(labels, d)))  
             pp = simplex.project_distribution(sample_dist, use_logs=False)
             x_row.append(pp[0])
             y_row.append(pp[1])

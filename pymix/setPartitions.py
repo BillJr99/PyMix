@@ -215,7 +215,7 @@ def get_random_partition(G):
     d = {}
     ind = 0
     for e in kap:
-        if not d.has_key(e):
+        if e not in d:
             d[e] = ind
             ind += 1
     

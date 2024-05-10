@@ -34,7 +34,7 @@ This file contains auxiliary functions for the analysis of biological sequences.
 e.g. searching for transcription factor binding sites using mixtures of PWMs (positional weight matrices).
 """
 
-import mixture
+from . import mixture
 from numpy import numarray
 import re
 
@@ -125,7 +125,7 @@ def readFastaSequences(fileName, out_type='DataSet'):
     
     try:
         while 1==1:
-            line = f.next() 
+            line = next(f) 
             s = nameReg.search(line)
             if s:
                 if index != -1:
@@ -151,7 +151,7 @@ def readFastaSequences(fileName, out_type='DataSet'):
     elif out_type == 'ConstrainedDataSet':
         data = mixture.ConstrainedDataSet()    
     else:
-        raise TypeError, 'Invalid output type ' + str(out_type)
+        raise TypeError('Invalid output type ' + str(out_type))
         
     data.fromList(seqM,IDs=nameList)
     
@@ -233,7 +233,7 @@ def readAlnData(fn,reg_str=None, out_type='DataSet'):
         if pat:
             k =  pat.group(1)
             seq = pat.group(2)
-            if k in d.keys():
+            if k in list(d.keys()):
                 d[k] += seq
             else:
                 d[k] = seq
@@ -246,11 +246,11 @@ def readAlnData(fn,reg_str=None, out_type='DataSet'):
     elif out_type == 'ConstrainedDataSet':
         data = mixture.ConstrainedDataSet()    
     else:
-        raise TypeError, 'Invalid output type ' + str(out_type)
+        raise TypeError('Invalid output type ' + str(out_type))
     
-    sIDs = d.keys()
+    sIDs = list(d.keys())
     dMatrix = []
-    for z in d.keys():
+    for z in list(d.keys()):
         dMatrix.append(list(d[z]))
     
     data.fromList(dMatrix,IDs = sIDs)
@@ -351,7 +351,7 @@ def scanSequence(mix, bg, seq,scoring='mix'):
     # convert sequence to internal representation, alphabet of seq must be DNA
     alph = mixture.Alphabet(['A','C','G','T'])
     f = lambda x: alph.internal(x)
-    seq=map(f,seq)
+    seq=list(map(f,seq))
     
     dnr = mix.components[0].dist_nr
 

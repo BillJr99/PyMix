@@ -71,8 +71,8 @@ prior = mixture.MixtureModelPrior(0.03,0.03, piPr,compPrior)
 # intializing Bayesian mixture model
 pi = [0.4,0.6]
 m = mixture.BayesMixtureModel(2,pi,[c1,c2],prior)
-print "Initial parameters"
-print m
+print("Initial parameters")
+print(m)
 # Now that the model is complete we can start using it.
 
 # sampling data
@@ -80,14 +80,14 @@ data = m.sampleDataSet(600)
 
 # randomize model parameters
 m.modelInitialization(data)
-print "Randomized parameters"
-print m
+print("Randomized parameters")
+print(m)
 
 # parameter training
 m.mapEM(data,40,0.1)
 
-print "Retrained parameters"
-print m
+print("Retrained parameters")
+print(m)
 
 
 # clustering

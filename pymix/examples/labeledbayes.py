@@ -43,8 +43,8 @@ prior.structPriorHeuristic(0.01, N)
 # intializing Bayesian mixture model
 pi = [0.3,0.3,0.4]
 m = labeledBayesMixture.labeledBayesMixtureModel(3,pi,[c1,c2,c3],prior,struct=1)
-print "Initial parameters"
-print m
+print("Initial parameters")
+print(m)
 
 # sampling of the data set and assignement of sample labels
 
@@ -62,7 +62,7 @@ cdat.fromList(l)
 
 # the labels are assigned to the data set. By construction the 
 # first 90 samples are labeled.
-cdat.setConstrainedLabels([range(30),range(30,60,1),range(60,91,1) ])
+cdat.setConstrainedLabels([list(range(30)),list(range(30,60,1)),list(range(60,91,1)) ])
 
 # randomize model parameters before training
 m.modelInitialization(cdat)
@@ -70,7 +70,7 @@ m.modelInitialization(cdat)
 # run parameter estimation and structure learning
 m.bayesStructureEM(cdat,1,5,80,0.1,silent=0)
 
-print m
+print(m)
 c = m.classify(cdat)
 
 

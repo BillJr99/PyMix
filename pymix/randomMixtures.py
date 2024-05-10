@@ -1,4 +1,4 @@
-import mixture
+from . import mixture
 import numpy
 import random
 import copy
@@ -6,7 +6,7 @@ import time
 import fullEnumerationExhaustive
 import gc
 import StructureLearningVariants
-import setPartitions
+from . import setPartitions
 
 def updateHyperparameters(model, data, delta):
     for j,p in enumerate(model.prior.compPrior):
@@ -219,7 +219,7 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
         elif G < 15:
             struct_j = random.choice(P)
         else:
-            print 'WARNING: improper structure sampling !'
+            print('WARNING: improper structure sampling !')
             struct_j = setPartitions.get_random_partition(G)
         
         #print '\nstruct',j,struct_j
@@ -261,7 +261,7 @@ def getRandomCSIMixture(G, p, KL_lower, KL_upper, M=8, dtypes='discgauss', seed 
                             break
 
                     if tries >= max_tries:
-                        raise RuntimeError, 'Failed to find separated parameters !'
+                        raise RuntimeError('Failed to find separated parameters !')
                                                 
                     
                 for cind in grp:
@@ -405,7 +405,7 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
         elif G < 15:
             struct_j = random.choice(P)
         else:
-            print 'WARNING: improper structure sampling !'
+            print('WARNING: improper structure sampling !')
             struct_j = setPartitions.get_random_partition(G)
         
         #print '\nstruct',j,struct_j
@@ -447,7 +447,7 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
                             break
 
                     if tries >= max_tries:
-                        raise RuntimeError, 'Failed to find separated parameters !'
+                        raise RuntimeError('Failed to find separated parameters !')
                                                 
                     
                 for cind in grp:
@@ -526,17 +526,17 @@ def getRandomCSIMixture_conditionalDists(G, p, KL_lower, KL_upper, M=8, dtypes='
 #-------------------------------------------------------------------------------------------
 # XXX debug 
 def printModel(m,title):
-    print '\n'+title+':'
-    print 'pi:', ['%.3f' % m.pi[i] for i in range(m.G)]
+    print('\n'+title+':')
+    print('pi:', ['%.3f' % m.pi[i] for i in range(m.G)])
     for jj in range(m.dist_nr):
-        print 'Feature', jj,':'
+        print('Feature', jj,':')
         for ll in m.leaders[jj]:
             if isinstance(m.components[ll][jj], mixture.DiscreteDistribution):
                 f = lambda x: '%.3f' % x
-                print '  ',[ll]+  m.groups[jj][ll],':', map(f, m.components[ll][jj].phi)
+                print('  ',[ll]+  m.groups[jj][ll],':', list(map(f, m.components[ll][jj].phi)))
             else:
-                print '  ',[ll]+  m.groups[jj][ll],':', m.components[ll][jj]
-    print
+                print('  ',[ll]+  m.groups[jj][ll],':', m.components[ll][jj])
+    print()
 
 
 def printStructure(m):
@@ -546,7 +546,7 @@ def printStructure(m):
         for l in m.leaders[j]:
             s[j].append( (l,)+tuple( m.groups[j][l] ) )
 
-    print s
+    print(s)
 
 
 
@@ -607,7 +607,7 @@ def checkComponentRedundancy(leaders, groups):
                     break
             if len(candidate_dicts) > 0:
                 for c in candidate_dicts:
-                    toMerge.append(c.keys())
+                    toMerge.append(list(c.keys()))
         
         #print '***',toMerge
         for i in range(len(toMerge)-1,-1,-1):
@@ -780,17 +780,17 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
     
     gen.prior.structPriorHeuristic(delta, data.N)
     
-    print '\nupdating generating model structure:'
-    print 'vorher:'
-    print gen.leaders
-    print gen.groups
+    print('\nupdating generating model structure:')
+    print('vorher:')
+    print(gen.leaders)
+    print(gen.groups)
 
 
     fullEnumerationExhaustive.updateStructureBayesianFullEnumeration(gen, data, silent=1)
 
-    print '\nnachher:'
-    print gen.leaders
-    print gen.groups
+    print('\nnachher:')
+    print(gen.leaders)
+    print(gen.groups)
 
 
     if silent == False:
@@ -809,14 +809,14 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
     nr_steps = 400
     em_delta = 0.6
     
-    print 'start training'
-    print 'EM repeats:',nr_rep
+    print('start training')
+    print('EM repeats:',nr_rep)
 
     m.randMaxTraining(data,nr_rep, nr_steps,em_delta,silent=1,rtype=0)
-    print 'finished training'
+    print('finished training')
 
     if skipAfterRNGcalls == True:
-        print '*** Skipping !'
+        print('*** Skipping !')
         return numpy.zeros(4)
 
 
@@ -827,13 +827,13 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
         cmap = {}
         
         for j in range(gen.dist_nr):
-            print '\nfeature:',j
+            print('\nfeature:',j)
     
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
-                print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(i1,'->', kldists.argmin(), ['%.2f' % float(x) for x in kldists])     # kldists.min()
             
         
 #        for i1 in range(m.G):
@@ -907,13 +907,13 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 
     #print m.prior
 
-    print '-----------------------------------------------------------------------'
-    print '\n True structure:'
-    print 'True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen)
+    print('-----------------------------------------------------------------------')
+    print('\n True structure:')
+    print('True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen))
     #for j in range(m.dist_nr):
     #    print j,gen.leaders[j], gen.groups[j]
-    print gen.leaders
-    print gen.groups
+    print(gen.leaders)
+    print(gen.groups)
 
     if silent == False:
         printModel(m,'trained model')
@@ -925,10 +925,10 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
     t1 = time.time()
     time2 = t1-t0    
     #m1.mapEM(data,40,0.1)
-    print '\nTop down (',str(time2),'s ):'
-    print m1.leaders
-    print m1.groups
-    print 'Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1)
+    print('\nTop down (',str(time2),'s ):')
+    print(m1.leaders)
+    print(m1.groups)
+    print('Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1))
 #    print 'Accuracy:',mixture.structureAccuracy(gen,m1)  # structureEditDistance(gen,m1)
 
     if silent == False:
@@ -949,10 +949,10 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 #    print
 #    for j in range(m2.dist_nr):
 #        print j,m2.leaders[j], m2.groups[j]
-    print '\nFull enumeration Fixed Order  (',str(time2),'s ):'
-    print m2.leaders
-    print m2.groups
-    print 'Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2)
+    print('\nFull enumeration Fixed Order  (',str(time2),'s ):')
+    print(m2.leaders)
+    print(m2.groups)
+    print('Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2))
 #    print 'Accuracy:',mixture.structureAccuracy(gen,m2) # structureEditDistance(gen,m1)
 
 
@@ -972,10 +972,10 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 #    print 
 #    for j in range(m3.dist_nr):
 #        print j,m3.leaders[j], m3.groups[j]
-    print '\nBottom up: (',str(time2),'s ):'
-    print m3.leaders
-    print m3.groups
-    print 'Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3)
+    print('\nBottom up: (',str(time2),'s ):')
+    print(m3.leaders)
+    print(m3.groups)
+    print('Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3))
 #    print 'Accuracy:',mixture.structureAccuracy(gen,m3) # structureEditDistance(gen,m1)
 
 
@@ -993,17 +993,17 @@ def scoreStructureLearning(N, gen, delta, seed=None, silent=False, skipAfterRNGc
 #    print 
 #    for j in range(m4.dist_nr):
 #        print j,m4.leaders[j], m4.groups[j]
-    print '\nFull enumeration: (',str(time2),'s )'
-    print m4.leaders
-    print m4.groups
-    print 'Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4)
+    print('\nFull enumeration: (',str(time2),'s )')
+    print(m4.leaders)
+    print(m4.groups)
+    print('Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4))
 #    print 'Accuracy:',mixture.structureAccuracy(gen,m4)
 
     if silent == False:
         printModel(m4,'full enumeration model')
 
 
-    print '-----------------------------------------------------------------------'
+    print('-----------------------------------------------------------------------')
 
 
 
@@ -1107,7 +1107,7 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 #    print 'finished training'
 
     if skipAfterRNGcalls == True:
-        print '*** Skipping !'
+        print('*** Skipping !')
         return numpy.zeros(4)
 
 
@@ -1178,18 +1178,18 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
 
     if (not (round(logp_top,3) <= round(logp_full,3) ) or not (round(logp_full_fixed,3) <= round(logp_full,3))
         or not (round(logp_bottom,3) <= round(logp_full,3)) ):
-        print 'ERROR:'
-        print 'top:',logp_top
-        print 'full fixed:',logp_full_fixed
-        print 'full:',logp_full
-        print 'bottom:',logp_bottom,'\n'
+        print('ERROR:')
+        print('top:',logp_top)
+        print('full fixed:',logp_full_fixed)
+        print('full:',logp_full)
+        print('bottom:',logp_bottom,'\n')
         
         printModel(gen,'generating model')
         printStructure(gen)
-        print
+        print()
         printModel(m4,'full enumeration model')
         printStructure(m4)
-        print
+        print()
         printModel(m2,'fixed full model')
         printStructure(m2)
         
@@ -1219,175 +1219,175 @@ def scoreStructureLearning_diffFullVsTopdown(N, gen, delta, seed=None, silent=Fa
     compred = checkComponentRedundancy(gen.leaders, gen.groups)
     if not(str(logp_top) == str(logp_full_fixed) == str(logp_full) ):
 
-        print '-----------------------------------------------------------------------'
+        print('-----------------------------------------------------------------------')
 
-        print 'Different:'
-        print 'top:',logp_top
-        print 'full fixed:',logp_full_fixed
-        print 'full:',logp_full
-        print 'bottom:',logp_bottom,'\n'
+        print('Different:')
+        print('top:',logp_top)
+        print('full fixed:',logp_full_fixed)
+        print('full:',logp_full)
+        print('bottom:',logp_bottom,'\n')
 
         explain = 0
         if str(compred) != '[]':
-            print '*** redundant components',compred
+            print('*** redundant components',compred)
             explain = 1
         if gen.pi.min() < 0.05:
-            print '*** vanishing component in generating model'
+            print('*** vanishing component in generating model')
             explain = 1
         if m.pi.min() < 0.05:
-            print '*** vanishing component in trained model'
+            print('*** vanishing component in trained model')
             explain = 1
 
         if explain == 0:
-            print '*** UNEXPLAINED !'
+            print('*** UNEXPLAINED !')
 
 
         printModel(gen,'generating model')
         printModel(m,'trained model')
         #print 'Trained model diff (simplistic):',train_diff
-        print 'D: Mixture distance gen/trained:',mix_dist1
-        print 'D: Mixture distance trained/gen:',mix_dist2
+        print('D: Mixture distance gen/trained:',mix_dist1)
+        print('D: Mixture distance trained/gen:',mix_dist2)
 
-        print 'D: Mixture Max-distance gen/trained:',max_dist1
-        print 'D: Mixture Max-distance trained/gen:',max_dist2
+        print('D: Mixture Max-distance gen/trained:',max_dist1)
+        print('D: Mixture Max-distance trained/gen:',max_dist2)
 
 
-        print '\nGenerating distances to self:'
+        print('\nGenerating distances to self:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
-                print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(['%.2f' % float(x) for x in kldists])     # kldists.min()
 
-        print '\nTrained distances to self:'
+        print('\nTrained distances to self:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], m.components[i2][j])
-                print map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(['%.2f' % float(x) for x in kldists])     # kldists.min()
 
 
-        print '\nTrained distances to generating:'
+        print('\nTrained distances to generating:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
-                print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(i1,'->', kldists.argmin(), ['%.2f' % float(x) for x in kldists])     # kldists.min()
 
 
 
-        print '\n True structure:'
-        print 'True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen)
+        print('\n True structure:')
+        print('True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen))
         #for j in range(m.dist_nr):
         #    print j,gen.leaders[j], gen.groups[j]
         printStructure(gen)
         
-        print '\nTop down:'
+        print('\nTop down:')
         printStructure(m1)
-        print 'Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1)
+        print('Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1))
         printModel(m1,'top down model')
 
-        print '\nFull enumeration Fixed Order:'
+        print('\nFull enumeration Fixed Order:')
         printStructure(m2)
-        print 'Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2)
+        print('Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2))
         printModel(m2,'full fixed model')
 
-        print '\nBottom up:'
+        print('\nBottom up:')
         printStructure(m3)
-        print 'Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3)
+        print('Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3))
         printModel(m3,'bottom up model')
 
-        print '\nFull enumeration:' 
+        print('\nFull enumeration:') 
         printStructure(m4)
-        print 'Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4)
+        print('Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4))
         printModel(m4,'full enumeration model')
 
 
-        print '-----------------------------------------------------------------------'
+        print('-----------------------------------------------------------------------')
 
     elif str(compred) != '[]' and nr_full_lead > m4.p and match != 1:  # redundant components and not fully merged
-        print '-----------------------------------------------------------------------'
-        print 'Same but redundant components:', compred
+        print('-----------------------------------------------------------------------')
+        print('Same but redundant components:', compred)
 
 
 
         printModel(gen,'generating model')
         printModel(m,'trained model')
         #print 'Trained model diff:',train_diff        
-        print 'S: Mixture distance gen/trained:',mix_dist1
-        print 'S: Mixture distance trained/gen:',mix_dist2
+        print('S: Mixture distance gen/trained:',mix_dist1)
+        print('S: Mixture distance trained/gen:',mix_dist2)
 
-        print 'S: Mixture Max-distance gen/trained:',max_dist1
-        print 'S: Mixture Max-distance trained/gen:',max_dist2
+        print('S: Mixture Max-distance gen/trained:',max_dist1)
+        print('S: Mixture Max-distance trained/gen:',max_dist2)
 
         
-        print '\nGenerating distances to self:'
+        print('\nGenerating distances to self:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(gen.components[i1][j], gen.components[i2][j])
-                print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(i1,':', ['%.2f' % float(x) for x in kldists])     # kldists.min()
 
-        print '\nTrained distances to self:'
+        print('\nTrained distances to self:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], m.components[i2][j])
-                print i1,':', map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(i1,':', ['%.2f' % float(x) for x in kldists])     # kldists.min()
 
 
-        print '\nTrained distances to generating:'
+        print('\nTrained distances to generating:')
         cmap = {}
         for j in range(gen.dist_nr):
-            print 'feature:',j
+            print('feature:',j)
 
             for i1 in range(m.G):
                 kldists = numpy.zeros(m.G)
                 for i2 in range(m.G):
                     kldists[i2] = mixture.sym_kl_dist(m.components[i1][j], gen.components[i2][j])
-                print i1,'->', kldists.argmin(), map(lambda x:'%.2f' % float(x),kldists)     # kldists.min()
+                print(i1,'->', kldists.argmin(), ['%.2f' % float(x) for x in kldists])     # kldists.min()
 
 
 
-        print '\n True structure:'
-        print 'True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen)
+        print('\n True structure:')
+        print('True model post:',mixture.get_loglikelihood(gen, data) + gen.prior.pdf(gen))
         #for j in range(m.dist_nr):
         #    print j,gen.leaders[j], gen.groups[j]
         printStructure(gen)
         
 
-        print '\nTop down:'
+        print('\nTop down:')
         printStructure(m1)
-        print 'Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1)
+        print('Top down model post:',mixture.get_loglikelihood(m1, data) + m1.prior.pdf(m1))
 
-        print '\nFull enumeration Fixed Order:'
+        print('\nFull enumeration Fixed Order:')
         printStructure(m2)
-        print 'Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2)
+        print('Full fixed order model post:',mixture.get_loglikelihood(m2, data) + m2.prior.pdf(m2))
 
-        print '\nBottom up:'
+        print('\nBottom up:')
         printStructure(m3)
-        print 'Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3)
+        print('Bottom up model post:',mixture.get_loglikelihood(m3, data) + m3.prior.pdf(m3))
 
-        print '\nFull enumeration:' 
+        print('\nFull enumeration:') 
         printStructure(m4)
-        print 'Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4)
+        print('Full enumeration model post:',mixture.get_loglikelihood(m4, data) + m4.prior.pdf(m4))
 
-        print '-----------------------------------------------------------------------'
+        print('-----------------------------------------------------------------------')
     
 #    else:
 #        print '-----------------------------------------------------------------------'
@@ -1440,10 +1440,10 @@ def evaluateStructureLearning(rep, N, G, p, KL_lower, KL_upper, dtypes='discgaus
         dists += scoreStructureLearning(N, gen)
     
 
-    print '\nAverage distances to generating ('+str(rep)+' runs)'    
-    print 'Top down',dists[0] / float(rep)
-    print 'Full enumeration',dists[1] / float(rep)
-    print 'Bottom up',dists[2] / float(rep)
+    print('\nAverage distances to generating ('+str(rep)+' runs)')    
+    print('Top down',dists[0] / float(rep))
+    print('Full enumeration',dists[1] / float(rep))
+    print('Bottom up',dists[2] / float(rep))
     
     
     
@@ -1475,7 +1475,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         
             gen = getRandomCSIMixture(G, p, KL_lower, KL_upper, M=M, dtypes=dtypes, disc_sampling_dist = disc_sampling_dist )   
         except RuntimeError: # XXX
-            print '*** skipping',r 
+            print('*** skipping',r) 
             continue # XXX
             
         
@@ -1496,7 +1496,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         # reset structure
         m.initStructure()
 
-        print '** Training'
+        print('** Training')
     
         #m.randMaxTraining(data,nr_rep, nr_steps,delta,silent=1,rtype=0)
         m.mapEM(data, 1, 0.1, silent=1)  # one EM update for perturbation
@@ -1516,7 +1516,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
 
         t1 = time.time()
         time2 = t1-t0
-        print '\nold:',time2, 'seconds'    
+        print('\nold:',time2, 'seconds')    
         t_old.append(time2)
 
         gc.collect()
@@ -1525,7 +1525,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         m1.updateStructureBayesian( data,silent=1)
         t1 = time.time()
         time1 = t1-t0
-        print 'history:',time1, 'seconds'    
+        print('history:',time1, 'seconds')    
         t_history.append(time1)
 
         gc.collect()
@@ -1534,7 +1534,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         StructureLearningVariants.updateStructureBayesian_OLDDECISIONBOUNDS(m4, data,silent=1)
         t1 = time.time()
         time4 = t1-t0
-        print 'bound:',time4, 'seconds'    
+        print('bound:',time4, 'seconds')    
         t_bound.append(time4)
 
         gc.collect()
@@ -1543,7 +1543,7 @@ def timeStructureLearning(rep, N, G, p, KL_lower, KL_upper, M=8, dtypes='discgau
         r = StructureLearningVariants.updateStructureBayesianDECISIONBOUNDS(m3, data, silent=1,returntypes='boundcounts')  #
         t1 = time.time()
         time3 = t1-t0
-        print 'historybound:',time3, 'seconds'    
+        print('historybound:',time3, 'seconds')    
         t_historybound.append(time3)
 
 #        print '  acc:', r[0] / (r[0]+r[1])

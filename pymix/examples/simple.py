@@ -47,8 +47,8 @@ def setup2():
 def run():
     m = setup()
     
-    print "Initial parameters"
-    print m
+    print("Initial parameters")
+    print(m)
     # Now that the model is complete we can start using it.
 
     # sampling data
@@ -59,13 +59,13 @@ def run():
     
     # randomize model parameters
     m.modelInitialization(data)
-    print "Randomized parameters"
-    print m
+    print("Randomized parameters")
+    print(m)
 
     # parameter training
     m.EM(data,40,0.1)
-    print "Retrained parameters"
-    print m
+    print("Retrained parameters")
+    print(m)
 
     # clustering
     c = m.classify(data,silent=1)

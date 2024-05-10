@@ -35,7 +35,7 @@ Dirichlet mixture priors for amino acid data.
 
 """
 
-import mixture
+from . import mixture
 import numarray
 
 def getAATable():
@@ -107,14 +107,14 @@ def printPropertyTable():
     alph = ['A','R','N','D','C','Q','E','G','H','I','L','K','M','F','P','S','T','W','Y','V','-'] 
 
     pos_count = [ s.count('X') for s in M ] 
-    print ' '*20,
+    print(' '*20, end=' ')
     
     for tt in alph:
-        print tt,' ',
-    print
+        print(tt,' ', end=' ')
+    print()
     
     for i in range(len(M)):
-        print "%-20s" % annot[i],
+        print("%-20s" % annot[i], end=' ')
         r = [' '] * 21
         for j,aa in enumerate(alph):
             if M[i][j] == 'X':
@@ -124,8 +124,8 @@ def printPropertyTable():
             else:
                 raise RuntimeError
         for rr in r:
-            print rr,' ',
-        print
+            print(rr,' ', end=' ')
+        print()
 
 
 def readUCSCPrior(filename):
@@ -166,7 +166,7 @@ def readUCSCPrior(filename):
         if m3:
             s = m3.groups(1)[0]
             alpha = s.split(' ')
-            alpha = map(float,alpha)
+            alpha = list(map(float,alpha))
             dummy =  alpha.pop(0) # first entry is the sum of the others -> remove
             alpha_mat.append(alpha)
 

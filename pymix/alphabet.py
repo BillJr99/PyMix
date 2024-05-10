@@ -64,7 +64,7 @@ class Alphabet(EmissionDomain):
         strout = "GHMM Alphabet:\n"
         strout += "Number of symbols: " + str(len(self)) + "\n"
         strout += "External: " + str(self.listOfCharacters) + "\n"
-        strout += "Internal: " + str(range(len(self))) + "\n"
+        strout += "Internal: " + str(list(range(len(self)))) + "\n"
         return strout
     
 
@@ -74,7 +74,7 @@ class Alphabet(EmissionDomain):
 
     def size(self):
         """ Deprecated """
-        print "Warning: The use of .size() is deprecated. Use len() instead."
+        print("Warning: The use of .size() is deprecated. Use len() instead.")
         return len(self.listOfCharacters)
 
         
@@ -92,7 +92,7 @@ class Alphabet(EmissionDomain):
         
         result = copy.deepcopy(emissionSequence)
         try:
-            result = map(lambda i: self.index[i], result)
+            result = [self.index[i] for i in result]
         except IndexError:
             raise KeyError
         return result
@@ -105,7 +105,7 @@ class Alphabet(EmissionDomain):
             Raises KeyError
         """
         if internal < 0 or len(self.listOfCharacters) <= internal:
-            raise KeyError, "Internal symbol "+str(internal)+" not recognized."
+            raise KeyError("Internal symbol "+str(internal)+" not recognized.")
         return self.listOfCharacters[internal]
 
     def externalSequence(self, internalSequence):
@@ -114,7 +114,7 @@ class Alphabet(EmissionDomain):
         """
         result = copy.deepcopy(internalSequence)
         try:
-            result = map(lambda i: self.listOfCharacters[i], result)
+            result = [self.listOfCharacters[i] for i in result]
         except IndexError:
             raise KeyError
         return result
@@ -130,7 +130,7 @@ DNA = Alphabet(['a','c','g','t'])
 AminoAcids = Alphabet(['A','C','D','E','F','G','H','I','K','L',
                        'M','N','P','Q','R','S','T','V','W','Y'])
 def IntegerRange(a,b):
-    l = range(a,b)
+    l = list(range(a,b))
     for i,s in enumerate(l):
         l[i] = str(s)
     return Alphabet(l)

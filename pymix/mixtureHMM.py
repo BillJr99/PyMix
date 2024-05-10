@@ -32,7 +32,7 @@
 """
 Mixtures of HMMs (requires the GHMM package)
 """
-import mixture
+from . import mixture
 import ghmm 
 import numpy
 import copy
@@ -60,7 +60,7 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
 
     def __copy__(self):        
         if self.complexData:
-            raise NotImplementedError, "No copying of complex DataSets yet."
+            raise NotImplementedError("No copying of complex DataSets yet.")
 
 
     def fromGHMM(self,List,sequences, IDs = None, col_header=None):
@@ -86,13 +86,13 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
             self.p += len(List[0])
          
         if not IDs:
-            self.sampleIDs = range(self.N)
+            self.sampleIDs = list(range(self.N))
         else:
             assert len(IDs) == self.N
             self.sampleIDs = IDs
 
         if not col_header:
-             l = range(self.p)
+             l = list(range(self.p))
              self.headers = []
              for k in l:
                 self.headers.append(str(k))
@@ -173,19 +173,19 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
 
 
     def removeFeatures(self, ids):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def removeSamples(self,fid,min_value,max_value):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def maskDataSet(self, valueToMask, maskValue):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def maskFeatures(self, headerList, valueToMask, maskValue):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def getExternalFeature(self, fid):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
     def getInternalFeature(self, i):
         """
@@ -199,7 +199,7 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
          
         assert self.suff_dataRange is not None  
         if i < 0 or i >= len(self.suff_dataRange):
-            raise IndexError, "Invalid index " + str(i)
+            raise IndexError("Invalid index " + str(i))
 
         if i == 0:
             prev_index = 0
@@ -230,7 +230,7 @@ class SequenceDataSet(mixture.ConstrainedDataSet):
             return self.internalData[:,prev_index:this_index ]  # multiple features, feature 'i' has multiple dimensions
         
     def extractSubset(self,ids):
-        raise NotImplementedError,"Needs implementation"
+        raise NotImplementedError("Needs implementation")
         
 
 
@@ -269,7 +269,7 @@ class HMM(mixture.ProbDistribution):
                 # gaussian emissions
                 self.freeParams += (self.hmm.M * 2) + (self.hmm.M -1)
             else:
-                raise TypeError, "Unknown EmissionDomain "+str(self.hmm.emissionDomain.__class__)
+                raise TypeError("Unknown EmissionDomain "+str(self.hmm.emissionDomain.__class__))
         
         
         
@@ -279,14 +279,14 @@ class HMM(mixture.ProbDistribution):
         
 
     def __eq__(self,other):
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
 
     def __str__(self):
         #return str(self.hmm)
         return "< GHMM object >"
 
     def __copy__(self):
-        raise NotImplementedError, "Needs implementation"
+        raise NotImplementedError("Needs implementation")
     
     def pdf(self,data):
 
@@ -296,7 +296,7 @@ class HMM(mixture.ProbDistribution):
         elif isinstance(data, ghmm.SequenceSet):
             pass
         else:
-            raise TypeError,"Unknown/Invalid input type:"+str(data)
+            raise TypeError("Unknown/Invalid input type:"+str(data))
 
         
         #print "pdf "+str(self.hmm.cmodel.name) +":"
@@ -312,7 +312,7 @@ class HMM(mixture.ProbDistribution):
         elif isinstance(data,ghmm.SequenceSet):
             pass
         else:
-            raise TypeError, "Unknown/Invalid input to MStep."    
+            raise TypeError("Unknown/Invalid input to MStep.")    
         
         # set sequence weights according to posterior
         for i in range(len(data)):
@@ -331,7 +331,7 @@ class HMM(mixture.ProbDistribution):
 
     def isValid(self,x):
         if not isinstance(x,ghmm.SequenceSet):
-            raise InvalidDistributionInput, "\nInvalid data in HMM."
+            raise InvalidDistributionInput("\nInvalid data in HMM.")
         
     def sufficientStatistics(self,x):
        pass
@@ -339,19 +339,19 @@ class HMM(mixture.ProbDistribution):
     
     
     def flatStr(self,offset):
-        raise NotImplementedError, "Needs implementation"                
+        raise NotImplementedError("Needs implementation")                
         
     def posteriorTraceback(self,x):
-        raise NotImplementedError, "Kawoom !"
+        raise NotImplementedError("Kawoom !")
 
     def update_suff_p(self):
         return self.suff_p
         
     def merge(self,dlist,weights):
-       raise NotImplementedError, "Kawoom !"
+       raise NotImplementedError("Kawoom !")
         
     def sortStr(self):
-        raise NotImplementedError, "Kawoom !"
+        raise NotImplementedError("Kawoom !")
 
 
 
